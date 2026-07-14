@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="Qc69jjFUGGCVJHBXCcIp">
+    <mxGraphModel dx="2054" dy="1103" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Household" vertex="1">
+          <mxGeometry height="60" width="120" x="100" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Item" vertex="1">
+          <mxGeometry height="60" width="120" x="730" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Inventory Record" vertex="1">
+          <mxGeometry height="60" width="120" x="550" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="User" vertex="1">
+          <mxGeometry height="60" width="120" x="410" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Storage Area" vertex="1">
+          <mxGeometry height="60" width="120" x="220" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-6" edge="1" parent="1" source="zT0zkaGAIehmjX-aqBMm-1" style="endArrow=open;html=1;endSize=12;startArrow=diamondThin;startSize=14;startFill=0;edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="zT0zkaGAIehmjX-aqBMm-5" value="Household has many Pantries">
+          <mxGeometry relative="1" x="0.1818" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="170" y="170" as="sourcePoint" />
+            <mxPoint x="330" y="170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-7" connectable="0" parent="zT0zkaGAIehmjX-aqBMm-6" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-1" as="geometry">
+            <mxPoint x="10" y="10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-8" connectable="0" parent="zT0zkaGAIehmjX-aqBMm-6" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=top;" value="*" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry">
+            <mxPoint x="20" y="-30" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-9" edge="1" parent="1" source="zT0zkaGAIehmjX-aqBMm-1" style="endArrow=open;html=1;endSize=12;startArrow=diamondThin;startSize=14;startFill=0;edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="zT0zkaGAIehmjX-aqBMm-4" value="Household has many Users">
+          <mxGeometry relative="1" x="-0.0526" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="290" y="110" as="sourcePoint" />
+            <mxPoint x="410" y="210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-10" connectable="0" parent="zT0zkaGAIehmjX-aqBMm-9" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-1" as="geometry">
+            <mxPoint x="10" y="10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-11" connectable="0" parent="zT0zkaGAIehmjX-aqBMm-9" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=top;" value="*" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry">
+            <mxPoint x="-10" y="-30" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-12" edge="1" parent="1" source="zT0zkaGAIehmjX-aqBMm-5" style="endArrow=open;html=1;endSize=12;startArrow=diamondThin;startSize=14;startFill=0;edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="zT0zkaGAIehmjX-aqBMm-18" value="Pantry contains many locations">
+          <mxGeometry relative="1" x="0.1818" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="240" y="340" as="sourcePoint" />
+            <mxPoint x="360" y="440" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-13" connectable="0" parent="zT0zkaGAIehmjX-aqBMm-12" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-1" as="geometry">
+            <mxPoint x="10" y="10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-14" connectable="0" parent="zT0zkaGAIehmjX-aqBMm-12" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=top;" value="*" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry">
+            <mxPoint x="30" y="-30" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-15" edge="1" parent="1" source="zT0zkaGAIehmjX-aqBMm-3" style="endArrow=open;html=1;endSize=12;startArrow=diamondThin;startSize=14;startFill=0;edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="zT0zkaGAIehmjX-aqBMm-2" value="Inventory record references one item">
+          <mxGeometry relative="1" x="0.0556" y="20" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="710" y="680" as="sourcePoint" />
+            <mxPoint x="880" y="840" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-16" connectable="0" parent="zT0zkaGAIehmjX-aqBMm-15" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-1" as="geometry">
+            <mxPoint x="10" y="10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-17" connectable="0" parent="zT0zkaGAIehmjX-aqBMm-15" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=top;" value="1" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry">
+            <mxPoint x="30" y="-30" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Location" vertex="1">
+          <mxGeometry height="60" width="120" x="410" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-22" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Category" vertex="1">
+          <mxGeometry height="60" width="120" x="830" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-23" edge="1" parent="1" source="zT0zkaGAIehmjX-aqBMm-2" style="endArrow=open;html=1;endSize=12;startArrow=diamondThin;startSize=14;startFill=0;edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="zT0zkaGAIehmjX-aqBMm-22" value="Item belongs to one category">
+          <mxGeometry relative="1" x="0.3" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="850" y="900" as="sourcePoint" />
+            <mxPoint x="930" y="1000" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-24" connectable="0" parent="zT0zkaGAIehmjX-aqBMm-23" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-1" as="geometry">
+            <mxPoint x="10" y="10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-25" connectable="0" parent="zT0zkaGAIehmjX-aqBMm-23" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=top;" value="1" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry">
+            <mxPoint x="30" y="-30" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-26" edge="1" parent="1" source="zT0zkaGAIehmjX-aqBMm-18" style="endArrow=open;html=1;endSize=12;startArrow=diamondThin;startSize=14;startFill=0;edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="zT0zkaGAIehmjX-aqBMm-3" value="Location contains many inventory records">
+          <mxGeometry relative="1" x="0.32" y="15" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="650" y="480" as="sourcePoint" />
+            <mxPoint x="840" y="560" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-27" connectable="0" parent="zT0zkaGAIehmjX-aqBMm-26" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-1" as="geometry">
+            <mxPoint x="10" y="10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zT0zkaGAIehmjX-aqBMm-28" connectable="0" parent="zT0zkaGAIehmjX-aqBMm-26" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=top;" value="*" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry">
+            <mxPoint x="30" y="-30" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
