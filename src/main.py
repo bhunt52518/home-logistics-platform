@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from src.api.routes.health import router as health_router
+from src.api.routes.inventory.health import router as inventory_router
 from src.core.config import get_settings
 
 settings = get_settings()
@@ -12,6 +13,7 @@ app = FastAPI(
 )
 
 app.include_router(health_router)
+app.include_router(inventory_router)
 
 
 @app.get("/")
@@ -20,4 +22,5 @@ def root() -> dict[str, str]:
         "message": f"{settings.app_name} API",
         "docs": "/docs",
         "health": "/health",
+        "status": "/inventory/status", 
     }
