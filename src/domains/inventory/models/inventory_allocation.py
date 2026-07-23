@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from decimal import Decimal
 
 
 class InventoryAllocation(BaseModel):
 
-    quantity: Decimal
     location_id: int
+    quantity: Decimal = Field(gt=0)
