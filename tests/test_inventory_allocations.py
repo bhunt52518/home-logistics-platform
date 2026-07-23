@@ -29,6 +29,7 @@ def test_inventory_alloctions_check_is_true() -> None:
     body = response.json()
 
     assert body["valid"] is True 
+    assert body["message"] == "Allocation is valid."
 
 def test_inventory_alloctions_check_is_false() -> None:
     request_body = {
@@ -51,5 +52,8 @@ def test_inventory_alloctions_check_is_false() -> None:
     json=request_body,
 )
     body = response.json()
+
     assert response.status_code == 200
+
     assert body["valid"] is False 
+    assert body["message"] == "Allocation quantity does not equal purchased quntity."

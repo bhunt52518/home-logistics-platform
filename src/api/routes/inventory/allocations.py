@@ -9,6 +9,12 @@ router = APIRouter(tags=["Inventory"])
 def post_allocation(allocation_request: ItemAllocationRequest):
 
     result = is_allocation_valid(allocation_request= allocation_request)
+
+    if result:
+        message = "Allocation is valid."
+    else:
+        message = "Allocation quantity does not equal purchased quntity."
     return {
         "valid": result,
+        "message": message,
     }
