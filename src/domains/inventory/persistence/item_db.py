@@ -1,6 +1,6 @@
 from src.database.base import Base
 
-from sqlalchemy import Integer, String, Boolean, ForeignKey
+from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 class ItemDB(Base):
