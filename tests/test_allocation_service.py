@@ -42,13 +42,13 @@ def test_create_inventory_records_returns_record_for_each_allocation() -> None:
     assert records[0].item_id == allocation_request.item_id
     assert records[0].location_id == refrigerator.location_id
     assert records[0].quantity == refrigerator.quantity
-    assert records[0].item_unit == allocation_request.item_unit
+    assert records[0].unit == allocation_request.item_unit
     assert records[0].purchase_date == date.today()
     assert records[0].expiration_date is None
 
     assert records[1].item_id == allocation_request.item_id
     assert records[1].location_id == freezer.location_id
     assert records[1].quantity == freezer.quantity
-    assert records[1].item_unit == allocation_request.item_unit
+    assert records[1].unit == allocation_request.item_unit
     assert records[1].purchase_date == date.today()
     assert records[1].expiration_date is None

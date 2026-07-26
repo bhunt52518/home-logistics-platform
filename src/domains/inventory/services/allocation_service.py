@@ -22,7 +22,7 @@ def create_inventory_records(allocation_request: ItemAllocationRequest) -> list[
     # Will need to change purchase date later and add expiration date
 
     for allocation in allocation_request.allocations:
-        inventory_record = InventoryRecord(item_id = allocation_request.item_id, item_unit = allocation_request.item_unit, location_id = allocation.location_id,
+        inventory_record = InventoryRecord(item_id = allocation_request.item_id, unit = allocation_request.item_unit, location_id = allocation.location_id,
                                            quantity = allocation.quantity, purchase_date = date.today(), expiration_date = None)
         inventory_records.append(inventory_record)
 

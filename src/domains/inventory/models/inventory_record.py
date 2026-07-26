@@ -6,7 +6,7 @@ class InventoryRecord(BaseModel):
     item_id: int
     location_id: int
     quantity: Decimal
-    item_unit: str
+    unit: str
     purchase_date: date
     expiration_date: date | None = None
 
