@@ -5,7 +5,7 @@ from src.domains.inventory.persistence.inventory_record_db import InventoryRecor
 from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.persistence.location_db import LocationDB
 from src.domains.inventory.repositories.inventory_repository import (create_household, create_category, create_location,
-                                                                     create_item, create_inventory_record)
+                                                                     create_item, create_inventory_record, get_category)
 
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
@@ -77,7 +77,7 @@ def test_category_can_be_saved_and_retrieved() -> None:
     with Session(engine) as session:
         category = CategoryDB(name="Meat", perishable_default=True)
         saved_category = create_category(session=session, category=category)
-        retrieved_category = session.get(CategoryDB, saved_category.id)
+        retrieved_category = get_category(session=session, category_id=saved_category.id)
 
         assert saved_category.id is not None
         assert saved_category.name == "Meat"
@@ -96,7 +96,8 @@ def test_item_can_be_saved_and_retrieved() -> None:
         category = CategoryDB(name="meat", perishable_default=True)
         saved_category = create_category(session=session, category=category)
 
-        item = ItemDB(name="Chicken", category_id=saved_category.id, default_unit="lbs")
+        
+        item = ItemDB(name="Chicken", category_id=saved_category.id, default_unit="LB")
         saved_item = create_item(session=session, item=item)
         retrieved_item = session.get(ItemDB, saved_item.id)
 
@@ -122,7 +123,7 @@ def test_inventory_record_can_be_saved_and_retrieved() -> None:
         location = LocationDB(household_id=saved_household.id, name="Kitchen Refrigerator")
         saved_location = create_location(session=session, location=location)
 
-        item = ItemDB(name="Chicken", category_id=saved_category.id, default_unit="lbs")
+        item = ItemDB(name="Chicken", category_id=saved_category.id, default_unit="LB")
         saved_item = create_item(session=session, item=item)
 
         inventory_record = InventoryRecordDB(item_id=saved_item.id, location_id=saved_location.id, quantity=Decimal("2"),

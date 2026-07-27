@@ -5,6 +5,8 @@ from src.domains.inventory.persistence.location_db import LocationDB
 from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.persistence.inventory_record_db import InventoryRecordDB
 
+from src.domains.inventory.models.item import Item
+
 from sqlalchemy.orm import Session
 
 
@@ -38,13 +40,18 @@ def create_category(session: Session, category: CategoryDB) -> CategoryDB:
 
     return category
 
-def create_item(session: Session, item: ItemDB):
+def get_category(session: Session, category_id: int) -> CategoryDB | None:
 
-    session.add(item)
+    return session.get(CategoryDB, category_id)
+
+def create_item(session: Session, item: Item) -> ItemDB:
+    item_db = ItemDB(name=item.name, category_id=item.category_id, default_unit=item.default_unit)
+
+    session.add(item_db)
     session.commit()
-    session.refresh(item)
+    session.refresh(item_db)
 
-    return item
+    return item_db
 
 def create_inventory_record(session: Session, inventory_record: InventoryRecordDB):
 

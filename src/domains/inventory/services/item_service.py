@@ -1,0 +1,21 @@
+from sqlalchemy.orm import Session
+
+from src.domains.inventory.models.item import Item
+from src.domains.inventory.persistence.item_db import ItemDB
+from src.domains.inventory.repositories.inventory_repository import (create_item, get_category)
+from src.core.services.unit_conversion_service import normalize_unit
+
+def create_inventory_item(session: Session, name: str, category_id: int, default_unit: str) -> ItemDB:
+
+    category = get_category(session=session, category_id=category_id)
+
+    if category is None:
+        raise ValueError("Category does not exist.")
+
+    normalized_unit = normalize_unit(default_unit)
+
+    item = Item(name=name, category_id=category.id, default_unit=normalized_unit)
+
+    saved_item = create_item(session=session, item=item)
+
+    return saved_item
