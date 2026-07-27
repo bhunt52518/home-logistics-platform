@@ -1,5 +1,9 @@
+from sqlalchemy.orm import Session
+
 from src.domains.inventory.models.item_allocation_request import ItemAllocationRequest
 from src.domains.inventory.models.inventory_record import InventoryRecord
+from src.domains.inventory.persistence.inventory_record_db import InventoryRecordDB
+from src.domains.inventory.repositories.inventory_repository import apply_allocations
 
 from decimal import Decimal
 from datetime import date
@@ -27,3 +31,12 @@ def create_inventory_records(allocation_request: ItemAllocationRequest) -> list[
         inventory_records.append(inventory_record)
 
     return inventory_records
+
+def process_allocation(session: Session, allocation_request: ItemAllocationRequest) -> list[InventoryRecordDB]:
+
+    if not is_allocation_valid(allocation_request):
+        raise ValueError("Allocation quantity does not equal purchased quantity.")
+
+    inventory_records = create_inventory_records(allocation_request)
+
+    return apply_allocations(session=session, inventory_records=inventory_records)

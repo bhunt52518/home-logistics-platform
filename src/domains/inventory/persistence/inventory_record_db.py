@@ -17,5 +17,5 @@ class InventoryRecordDB(Base):
     location_id: Mapped[int] = mapped_column(Integer, ForeignKey("locations.id"), nullable=False)
     quantity: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
     unit: Mapped[str] = mapped_column(String, nullable=False)
-    purchased_date: Mapped[date] = mapped_column(Date, nullable=False)
+    purchase_date: Mapped[date] = mapped_column(Date, nullable=False)
     expiration_date: Mapped[date | None] = mapped_column(Date, nullable=True) 

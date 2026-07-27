@@ -12,9 +12,26 @@ from sqlalchemy.orm import Session
 
 
 
-def apply_allocations(inventory_records: list[InventoryRecord]) -> list[InventoryRecord]:
+def apply_allocations(session: Session, inventory_records: list[InventoryRecord]) -> list[InventoryRecordDB]:
+    inventory_records_dbs: list[InventoryRecordDB] = []
 
-    raise NotImplementedError
+    for inventory_record in inventory_records:
+        inventory_record_db = InventoryRecordDB(item_id=inventory_record.item_id, location_id=inventory_record.location_id, quantity=inventory_record.quantity,
+                                                unit=inventory_record.unit, purchase_date=inventory_record.purchase_date, expiration_date=inventory_record.expiration_date)
+
+        inventory_records_dbs.append(inventory_record_db)
+        session.add(inventory_record_db)
+
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
+    for inventory_record_db in inventory_records_dbs:
+        session.refresh(inventory_record_db)
+
+    return inventory_records_dbs
 
 def create_household(session: Session, household: HouseholdDB) -> HouseholdDB:
 
