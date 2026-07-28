@@ -1,20 +1,17 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 from src.domains.inventory.models.item_allocation_request import ItemAllocationRequest
-from src.domains.inventory.services.allocation_service import is_allocation_valid
+from src.domains.inventory.models.inventory_record_response import InventoryRecordResponse
+from src.domains.inventory.services.allocation_service import process_allocation
+from src.database.session import get_db
 
 router = APIRouter(tags=["Inventory"])
 
-@router.post("/allocations")
-def post_allocation(allocation_request: ItemAllocationRequest):
+@router.post("/allocations", response_model=list[InventoryRecordResponse])
+def post_allocation(allocation_request: ItemAllocationRequest, session: Session = Depends(get_db)):
 
-    result = is_allocation_valid(allocation_request= allocation_request)
-
-    if result:
-        message = "Allocation is valid."
-    else:
-        message = "Allocation quantity does not equal purchased quntity."
-    return {
-        "valid": result,
-        "message": message,
-    }
+    try:
+        return process_allocation(session=session, allocation_request=allocation_request)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error

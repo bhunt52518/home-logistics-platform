@@ -4,6 +4,8 @@ from src.domains.inventory.persistence.category_db import CategoryDB
 from src.domains.inventory.persistence.location_db import LocationDB
 from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.persistence.inventory_record_db import InventoryRecordDB
+from src.domains.inventory.models.household_create import HouseholdCreate
+from src.domains.inventory.persistence.household_db import HouseholdDB
 
 from src.domains.inventory.models.item import Item
 
@@ -33,13 +35,14 @@ def apply_allocations(session: Session, inventory_records: list[InventoryRecord]
 
     return inventory_records_dbs
 
-def create_household(session: Session, household: HouseholdDB) -> HouseholdDB:
+def create_household(session: Session, household: HouseholdCreate) -> HouseholdDB:
+    household_db = HouseholdDB(name=household.name)
 
-    session.add(household)
+    session.add(household_db)
     session.commit()
-    session.refresh(household)
+    session.refresh(household_db)
 
-    return household
+    return household_db
 
 def create_location(session: Session, location: LocationDB) -> LocationDB:
 

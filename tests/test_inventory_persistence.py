@@ -127,14 +127,14 @@ def test_inventory_record_can_be_saved_and_retrieved() -> None:
         saved_item = create_item(session=session, item=item)
 
         inventory_record = InventoryRecordDB(item_id=saved_item.id, location_id=saved_location.id, quantity=Decimal("2"),
-                                             unit=saved_item.default_unit, purchased_date=date(2025, 5, 27), expiration_date=None)
+                                             unit=saved_item.default_unit, purchase_date=date(2025, 5, 27), expiration_date=None)
         saved_inventory_record = create_inventory_record(session=session, inventory_record=inventory_record)
         retrieved_inventory_record = session.get(InventoryRecordDB, saved_inventory_record.id)
 
         assert saved_inventory_record is not None
         assert saved_inventory_record.id is not None
         assert saved_inventory_record.quantity == Decimal("2")
-        assert saved_inventory_record.purchased_date == date(2025, 5, 27)
+        assert saved_inventory_record.purchase_date == date(2025, 5, 27)
 
         assert retrieved_inventory_record is not None
         assert retrieved_inventory_record.id is not None
@@ -142,6 +142,6 @@ def test_inventory_record_can_be_saved_and_retrieved() -> None:
         assert retrieved_inventory_record.item_id == saved_item.id
         assert retrieved_inventory_record.location_id == saved_location.id
         assert retrieved_inventory_record.unit == saved_item.default_unit
-        assert retrieved_inventory_record.purchased_date == date(2025, 5, 27)
+        assert retrieved_inventory_record.purchase_date == date(2025, 5, 27)
         assert retrieved_inventory_record.expiration_date is None
 
