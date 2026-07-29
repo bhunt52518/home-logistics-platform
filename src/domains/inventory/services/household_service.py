@@ -7,6 +7,12 @@ from src.domains.inventory.repositories.inventory_repository import create_house
 
 
 
+#-----------------------------------------------------------------------------------
+# Create
+#-----------------------------------------------------------------------------------
+
+
+
 def create_inventory_household(session: Session, name:str) ->HouseholdDB:
     household = HouseholdCreate(name=name)
 

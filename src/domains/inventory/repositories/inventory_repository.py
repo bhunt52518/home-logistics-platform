@@ -1,5 +1,5 @@
 from src.domains.inventory.models.inventory_record import InventoryRecord
-from src.domains.inventory.persistence.household_db import HouseholdDB
+from src.domains.inventory.models.category_create import CategoryCreate
 from src.domains.inventory.persistence.category_db import CategoryDB
 from src.domains.inventory.persistence.location_db import LocationDB
 from src.domains.inventory.persistence.item_db import ItemDB
@@ -52,13 +52,14 @@ def create_location(session: Session, location: LocationDB) -> LocationDB:
 
     return location
 
-def create_category(session: Session, category: CategoryDB) -> CategoryDB:
+def create_category(session: Session, category: CategoryCreate) -> CategoryDB:
+    category_db = CategoryDB(name=category.name, perishable_default=category.perishable_default)
 
-    session.add(category)
+    session.add(category_db)
     session.commit()
-    session.refresh(category)
+    session.refresh(category_db)
 
-    return category
+    return category_db
 
 def get_category(session: Session, category_id: int) -> CategoryDB | None:
 

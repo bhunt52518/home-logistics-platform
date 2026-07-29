@@ -3,9 +3,9 @@ from src.core.services.name_validator import NameValidator
 
 
 
-
-class HouseholdCreate(BaseModel):
+class CategoryCreate(BaseModel):
     name: str
+    perishable_default: bool
 
     @field_validator("name")
     @classmethod
