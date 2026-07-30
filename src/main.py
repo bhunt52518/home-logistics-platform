@@ -5,6 +5,8 @@ from src.api.routes.inventory.health import router as inventory_router
 from src.api.routes.inventory.allocations import router as allocations_router
 from src.api.routes.inventory.households import router as households_router
 from src.api.routes.inventory.category import router as category_router
+from src.api.routes.inventory.locations import router as location_router
+
 from src.core.config import get_settings
 from src.database.init_db import initialize_database
 
@@ -23,6 +25,7 @@ app.include_router(health_router)
 app.include_router(allocations_router, prefix="/inventory",tags=["Inventory"])
 app.include_router(inventory_router, prefix="/inventory",tags=["Inventory"])
 app.include_router(category_router, prefix="/inventory", tags=["Inventory"])
+app.include_router(location_router, prefix="/inventory", tags=["Inventory"] )
 
 @app.on_event("startup")
 def startup() -> None:
@@ -43,3 +46,4 @@ app.include_router(
     prefix="/inventory",
     tags=["Inventory"],
 )
+
