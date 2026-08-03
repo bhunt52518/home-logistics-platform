@@ -3,12 +3,13 @@ from src.domains.inventory.models.category_create import CategoryCreate
 from src.domains.inventory.persistence.category_db import CategoryDB
 from src.domains.inventory.models.location_create import LocationCreate
 from src.domains.inventory.persistence.location_db import LocationDB
+from src.domains.inventory.models.item_create import ItemCreate
 from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.persistence.inventory_record_db import InventoryRecordDB
 from src.domains.inventory.models.household_create import HouseholdCreate
 from src.domains.inventory.persistence.household_db import HouseholdDB
 
-from src.domains.inventory.models.item import Item
+from src.domains.inventory.models.item_create import ItemCreate
 
 from sqlalchemy.orm import Session
 
@@ -75,7 +76,7 @@ def get_category(session: Session, category_id: int) -> CategoryDB | None:
 
     return session.get(CategoryDB, category_id)
 
-def create_item(session: Session, item: Item) -> ItemDB:
+def create_item(session: Session, item: ItemCreate) -> ItemDB:
     item_db = ItemDB(name=item.name, category_id=item.category_id, default_unit=item.default_unit)
 
     session.add(item_db)
@@ -84,10 +85,30 @@ def create_item(session: Session, item: Item) -> ItemDB:
 
     return item_db
 
+def get_item(session: Session, item_id: int) -> ItemDB:
+
+    return session.get(ItemDB, item_id)
+
 def create_inventory_record(session: Session, inventory_record: InventoryRecordDB):
 
     session.add(inventory_record)
     session.commit()
+    session.refresh(inventory_record)
+
+    return inventory_record
+
+def get_inventory_record(session: Session, inventory_record_id: int) -> InventoryRecordDB | None:
+
+    return session.get(InventoryRecordDB, inventory_record_id) 
+
+def update_inventory_record(session: Session, inventory_record: InventoryRecordDB) -> InventoryRecordDB:
+
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
     session.refresh(inventory_record)
 
     return inventory_record
