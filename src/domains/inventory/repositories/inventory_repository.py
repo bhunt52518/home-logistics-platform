@@ -112,3 +112,9 @@ def update_inventory_record(session: Session, inventory_record: InventoryRecordD
     session.refresh(inventory_record)
 
     return inventory_record
+
+def get_inventory_record_by_item(session: Session, item_id: int) -> list[InventoryRecordDB]:
+    inventory_record_by_item = session.query(InventoryRecordDB).filter(InventoryRecordDB.item_id==item_id).all()
+
+    return inventory_record_by_item
+    
