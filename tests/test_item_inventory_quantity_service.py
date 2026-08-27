@@ -13,6 +13,7 @@ from src.domains.inventory.services.item_inventory_quantity_service import get_i
 
 
 
+
 def test_item_inventory_quantity_returns_vailid_quantity() -> None:
     fake_session = MagicMock()
     fake_item_record = ItemDB(id=1, name="chicken", category_id=1, default_unit="lb")
