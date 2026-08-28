@@ -2,6 +2,8 @@ from fastapi.testclient import TestClient
 
 from src.main import app
 
+from decimal import Decimal
+
 client = TestClient(app)
 
 def test_inventory_alloctions_check_is_true() -> None:
@@ -24,12 +26,21 @@ def test_inventory_alloctions_check_is_true() -> None:
     "/inventory/allocations",
     json=request_body,
 )
+    body = response.json()
+    assert len(body) == 2
+
+    assert body[0]["item_id"] == 37
+    assert body[0]["location_id"] == 1
+    assert Decimal(str(body[0]["quantity"])) == Decimal("2")
+
+    assert body[1]["item_id"] == 37
+    assert body[1]["location_id"] == 2
+    assert Decimal(str(body[1]["quantity"])) == Decimal("8")
+
     assert response.status_code == 200
 
-    body = response.json()
 
-    assert body["valid"] is True 
-    assert body["message"] == "Allocation is valid."
+
 
 def test_inventory_alloctions_check_is_false() -> None:
     request_body = {
@@ -50,10 +61,10 @@ def test_inventory_alloctions_check_is_false() -> None:
     response = client.post(
     "/inventory/allocations",
     json=request_body,
-)
-    body = response.json()
+    )
 
-    assert response.status_code == 200
-
-    assert body["valid"] is False 
-    assert body["message"] == "Allocation quantity does not equal purchased quntity."
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "Allocation quantity does not equal purchased quantity."
+    }
+    

@@ -12,7 +12,7 @@ def consume_inventory(session: Session, consumption_request: InventoryConsumptio
         raise ValueError("Record does not exist.")
 
     if consumption_request.quantity > inventory_record.quantity:
-        raise ValueError("Consumption amount can not exceed inventory quantity")
+        raise ValueError("Consumption amount can not exceed inventory quantity.")
 
 
     inventory_record.quantity = inventory_record.quantity - consumption_request.quantity
