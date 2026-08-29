@@ -6,7 +6,7 @@ from datetime import date
 
 from src.main import app
 from src.domains.inventory.persistence.item_db import ItemDB
-from src.domains.inventory.persistence.category_db import CategoryDB
+from src.domains.inventory.models.restock_status_response import RestockStatusResponse
 from src.domains.inventory.models.item_quantity_response import ItemQuantityResponse
 
 client = TestClient(app)
@@ -122,3 +122,51 @@ def test_get_item_quaintity_rejects_invalid_item() -> None:
 
         mock_get_item_quantity.assert_called_once()
 
+def test_get_restock_status_returns_valid_status() -> None:
+    fake_restock_status = RestockStatusResponse(
+        name= "Chicken",
+        current_quantity= Decimal("1"),
+        restock_point= Decimal("2"),
+        unit= "lb",
+        needs_restock= True
+    )
+
+    with patch("src.api.routes.inventory.item.get_restock_status") as mock_get_restock_status:
+        mock_get_restock_status.return_value = fake_restock_status
+
+        response= client.get(
+            "/inventory/item/1/restock-status"
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {
+            "name": "Chicken",
+            "current_quantity": "1",
+            "restock_point": "2",
+            "unit": "lb",
+            "needs_restock": True
+        }
+        kwargs = mock_get_restock_status.call_args.kwargs
+
+        assert kwargs["item_id"] == 1
+        assert "session" in kwargs
+
+def test_get_restock_status_rejects_missing_item() -> None:
+
+    with patch("src.api.routes.inventory.item.get_restock_status") as mock_get_restock_status:
+        mock_get_restock_status.side_effect = ValueError("Item does not exist.")
+
+        response = client.get(
+            "/inventory/item/1/restock-status"
+        )
+
+        assert response.status_code == 400
+        assert response.json() == {
+            "detail": "Item does not exist."
+        }
+
+        mock_get_restock_status.assert_called_once()
+
+        kwargs = mock_get_restock_status.call_args.kwargs
+        assert kwargs["item_id"] == 1
+        assert "session" in kwargs

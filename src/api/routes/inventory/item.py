@@ -8,6 +8,8 @@ from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.services.item_service import (create_inventory_item)
 from src.domains.inventory.services.item_inventory_quantity_service import get_item_inventory_quantity
 from src.domains.inventory.models.item_quantity_response import ItemQuantityResponse
+from src.domains.inventory.models.restock_status_response import RestockStatusResponse
+from src.domains.inventory.services.restock_item_service import get_restock_status
 
 
 
@@ -33,3 +35,12 @@ def get_item_quantity(item_id: int, session: Session=Depends(get_db)) -> ItemQua
         return get_item_inventory_quantity(session=session, item_id=item_id)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))from error
+
+@router.get("/item/{item_id}/restock-status", response_model=RestockStatusResponse, status_code=200)
+
+def get_restock_status(item_id: int, session: Session=Depends(get_db)) -> RestockStatusResponse:
+
+    try:
+        return get_restock_status(session=session, item_id=item_id)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
