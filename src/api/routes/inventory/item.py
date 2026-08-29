@@ -20,7 +20,8 @@ router = APIRouter(tags=["Inventory"])
 def post_item(item_request: ItemCreate, session: Session=Depends(get_db)) -> ItemDB:
 
     try:
-        return create_inventory_item(session=session, category_id=item_request.category_id, name=item_request.name, default_unit=item_request.default_unit)
+        return create_inventory_item(session=session, category_id=item_request.category_id, name=item_request.name,
+                                     default_unit=item_request.default_unit, restock_point=item_request.restock_point)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))from error
 

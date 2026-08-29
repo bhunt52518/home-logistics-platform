@@ -17,6 +17,7 @@ def test_post_item_returns_created_item() -> None:
         category_id=1,
         name="Chicken",
         default_unit="lb",
+        restock_point=Decimal("2")
     )
 
     with patch("src.api.routes.inventory.item.create_inventory_item") as mock_create_inventory_item:
@@ -28,6 +29,7 @@ def test_post_item_returns_created_item() -> None:
                 "name": "Chicken",
                 "category_id": 1,
                 "default_unit": "lb",
+                "restock_point": "2",
             },
         )
 
@@ -36,7 +38,8 @@ def test_post_item_returns_created_item() -> None:
             "id": 1,
             "category_id": 1,
             "name": "Chicken",
-            "default_unit": "lb"
+            "default_unit": "lb",
+            "restock_point": "2",
         }
 
         kwargs = mock_create_inventory_item.call_args.kwargs
@@ -51,6 +54,7 @@ def test_post_item_rejects_invailid_category() -> None:
         category_id=1,
         name="Chicken",
         default_unit="lb",
+        restock_point= Decimal("2")
     )
 
     with patch("src.api.routes.inventory.item.create_inventory_item") as mock_create_inventory_item:
@@ -61,7 +65,8 @@ def test_post_item_rejects_invailid_category() -> None:
                     json={
                         "category_id": 999,
                         "name": "Chicken",
-                        "default_unit": "lb"
+                        "default_unit": "lb",
+                        "restock_point": "2",
                     },
                 )
         

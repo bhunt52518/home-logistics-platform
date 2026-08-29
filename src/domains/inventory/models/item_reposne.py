@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict
+from decimal import Decimal
 
 
 
@@ -10,3 +11,4 @@ class ItemResponse(BaseModel):
     name: str
     category_id: int
     default_unit: str
+    restock_point: Decimal | None

@@ -77,7 +77,7 @@ def get_category(session: Session, category_id: int) -> CategoryDB | None:
     return session.get(CategoryDB, category_id)
 
 def create_item(session: Session, item: ItemCreate) -> ItemDB:
-    item_db = ItemDB(name=item.name, category_id=item.category_id, default_unit=item.default_unit)
+    item_db = ItemDB(name=item.name, category_id=item.category_id, default_unit=item.default_unit, restock_point=item.restock_point)
 
     session.add(item_db)
     session.commit()
