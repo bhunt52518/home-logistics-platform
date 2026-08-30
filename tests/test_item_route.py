@@ -170,3 +170,58 @@ def test_get_restock_status_rejects_missing_item() -> None:
         kwargs = mock_get_restock_status.call_args.kwargs
         assert kwargs["item_id"] == 1
         assert "session" in kwargs
+
+def test_get_all_items_needing_restock_returns_valid_list() -> None:
+    fake_response_1 = RestockStatusResponse(name="Chicken", current_quantity=Decimal("2"), restock_point=Decimal("2"), unit="lb", needs_restock=True)
+    fake_response_2 = RestockStatusResponse(name="Steak", current_quantity=Decimal("2"), restock_point=Decimal("4"), unit="lb", needs_restock=True)
+    fake_response_3 = RestockStatusResponse(name="Milk", current_quantity=Decimal("0"), restock_point=Decimal("0"), unit="gal", needs_restock=True)
+
+    with patch("src.api.routes.inventory.item.get_items_needing_restock") as mock_get_items_needing_restock:
+        mock_get_items_needing_restock.return_value = [fake_response_1, fake_response_2, fake_response_3]
+
+        response = client.get(
+            "/inventory/item/restock-needed"
+        )
+
+        body = response.json()
+
+        assert response.status_code == 200
+        assert len(body) == 3
+
+        assert body[0] == {
+            "name": "Chicken",
+            "current_quantity": "2",
+            "restock_point": "2",
+            "unit": "lb",
+            "needs_restock": True
+        }
+        assert body[1] == {
+            "name": "Steak",
+            "current_quantity": "2",
+            "restock_point": "4",
+            "unit": "lb",
+            "needs_restock": True
+        }
+        assert body[2] == {
+            "name": "Milk",
+            "current_quantity": "0",
+            "restock_point": "0",
+            "unit": "gal",
+            "needs_restock": True
+        }
+
+        kwargs = mock_get_items_needing_restock.call_args.kwargs
+        assert "session" in kwargs
+
+def test_get_all_items_needing_restock_returns_empty_list() -> None:
+    with patch("src.api.routes.inventory.item.get_items_needing_restock") as mock_get_items_needing_restock:
+        mock_get_items_needing_restock.return_value = []
+
+        response = client.get(
+            "/inventory/item/restock-needed"
+        )
+        assert response.status_code == 200
+        assert response.json() == []
+
+        kwargs = mock_get_items_needing_restock.call_args.kwargs
+        assert "session" in kwargs

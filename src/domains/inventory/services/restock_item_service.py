@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from src.domains.inventory.repositories.inventory_repository import get_item
 from src.domains.inventory.services.item_inventory_quantity_service import get_item_inventory_quantity
 from src.domains.inventory.models.restock_status_response import RestockStatusResponse
+from src.domains.inventory.repositories.inventory_repository import get_items_with_restock_point
 from decimal import Decimal
 
 
@@ -28,3 +29,14 @@ def get_restock_status(session: Session, item_id: int) -> RestockStatusResponse:
 
     return restock_status
 
+def get_items_needing_restock(session: Session) -> list[RestockStatusResponse]:
+    items = get_items_with_restock_point(session=session)
+
+    items_needing_restock = []
+
+    for item in items:
+        restock_status = get_restock_status(session=session, item_id=item.id)
+        if restock_status.needs_restock is True:
+            items_needing_restock.append(restock_status)
+
+    return items_needing_restock

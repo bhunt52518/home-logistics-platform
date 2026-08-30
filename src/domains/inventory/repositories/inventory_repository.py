@@ -117,4 +117,8 @@ def get_inventory_record_by_item(session: Session, item_id: int) -> list[Invento
     inventory_record_by_item = session.query(InventoryRecordDB).filter(InventoryRecordDB.item_id==item_id).all()
 
     return inventory_record_by_item
-    
+
+def get_items_with_restock_point(session: Session) -> list[ItemDB]:
+    items_with_restock_point = session.query(ItemDB).filter(ItemDB.restock_point.is_not(None)).all()
+
+    return items_with_restock_point

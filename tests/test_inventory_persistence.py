@@ -4,8 +4,10 @@ from src.domains.inventory.persistence.household_db import HouseholdDB
 from src.domains.inventory.persistence.inventory_record_db import InventoryRecordDB
 from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.persistence.location_db import LocationDB
-from src.domains.inventory.repositories.inventory_repository import (create_household, create_category, create_location,
-                                                                     create_item, create_inventory_record, get_category)
+from src.domains.inventory.repositories.inventory_repository import (
+    create_household, create_category, create_location,create_item, create_inventory_record, get_category,
+    get_items_with_restock_point
+    )
 
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
@@ -144,4 +146,53 @@ def test_inventory_record_can_be_saved_and_retrieved() -> None:
         assert retrieved_inventory_record.unit == saved_item.default_unit
         assert retrieved_inventory_record.purchase_date == date(2025, 5, 27)
         assert retrieved_inventory_record.expiration_date is None
+
+def test_get_items_with_restock_point_retrieves_items() -> None:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    item_1 = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("2"))
+    item_2 = ItemDB(id=2, name="Milk", category_id=2, default_unit="gal", restock_point=Decimal("1"))
+    item_3 = ItemDB(id=3, name="Hammer", category_id=3, default_unit="each", restock_point=None)
+    item_4 = ItemDB(id=4, name="AA Battery", category_id=3, default_unit="each", restock_point=Decimal("0"))
+    item_5 = ItemDB(id=5, name="Steak", category_id=1, default_unit="lb", restock_point=Decimal("2"))
+
+    items = [ item_1, item_2, item_3, item_4, item_5]
+
+    with Session(engine) as session:
+        session.add_all(items)
+        session.commit()
+
+        result = get_items_with_restock_point(session=session)
+
+        result_ids =[item.id for item in result]
+
+        assert len(result) == 4
+
+        assert 1 in result_ids
+        assert 2 in result_ids
+        assert 4 in result_ids
+        assert 5 in result_ids
+
+        assert 3 not in result_ids
+
+def test_get_items_with_restock_point_returns_empty_item_list() -> None:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    item_1 = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=None)
+    item_2 = ItemDB(id=2, name="Milk", category_id=2, default_unit="gal", restock_point=None)
+    item_3 = ItemDB(id=3, name="Hammer", category_id=3, default_unit="each", restock_point=None)
+
+    items = [ item_1, item_2, item_3]
+
+    with Session(engine) as session:
+        session.add_all(items)
+        session.commit()
+
+        result = get_items_with_restock_point(session=session)
+
+        assert result == []
+
+        
 

@@ -9,7 +9,7 @@ from src.domains.inventory.services.item_service import (create_inventory_item)
 from src.domains.inventory.services.item_inventory_quantity_service import get_item_inventory_quantity
 from src.domains.inventory.models.item_quantity_response import ItemQuantityResponse
 from src.domains.inventory.models.restock_status_response import RestockStatusResponse
-from src.domains.inventory.services.restock_item_service import get_restock_status
+from src.domains.inventory.services.restock_item_service import get_restock_status, get_items_needing_restock
 
 
 
@@ -42,5 +42,14 @@ def get_restock_status(item_id: int, session: Session=Depends(get_db)) -> Restoc
 
     try:
         return get_restock_status(session=session, item_id=item_id)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+@router.get("/item/restock-needed", response_model=list[RestockStatusResponse], status_code=200)
+
+def get_all_items_needing_restock(session: Session=Depends(get_db)) -> list[RestockStatusResponse]:
+
+    try:
+        return get_items_needing_restock(session=session)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
