@@ -9,7 +9,7 @@ import pytest
 
 
 def test_item_create_accepts_valid_item() -> None:
-    request_body = {"name": "Chicken", "category_id": 1, "default_unit": "lb", "restock_point": 2}
+    request_body = {"name": "Chicken", "category_id": 1, "default_unit": "lb", "restock_point": 2, "target_stock": 5}
 
     item = ItemCreate(**request_body)
 
@@ -17,6 +17,7 @@ def test_item_create_accepts_valid_item() -> None:
     assert item.category_id == 1
     assert item.default_unit == "lb"
     assert item.restock_point == 2
+    assert item.target_stock == 5
 
 def test_item_create_rejects_invalid_name() -> None:
     with pytest.raises(ValidationError):
@@ -47,3 +48,20 @@ def test_item_create_rejects_invaild_restock_point() -> None:
 
     with pytest.raises(ValidationError):
         ItemCreate(**request_body)
+
+def test_item_create_rejects_invalid_target_stock() -> None:
+    request_body = {"name": "Chicken", "category_id": 1, "default_unit": "lb", "restock_point": 2, "target_stock": 0}
+
+    with pytest.raises(ValidationError):
+        ItemCreate(**request_body)
+
+def test_item_create_accepts_equal_target_and_restock_points() -> None:
+    request_body = {"name": "Chicken", "category_id": 1, "default_unit": "lb", "restock_point": 2, "target_stock": 2}
+
+    item = ItemCreate(**request_body)
+
+    assert item.name == "Chicken"
+    assert item.category_id == 1
+    assert item.default_unit == "lb"
+    assert item.restock_point == 2
+    assert item.target_stock == 2

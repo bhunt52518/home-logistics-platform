@@ -11,3 +11,5 @@ class RestockStatusResponse(BaseModel):
     restock_point: Decimal | None
     unit: str
     needs_restock: bool
+    target_stock: Decimal | None
+    suggested_purchase_quantity: Decimal | None

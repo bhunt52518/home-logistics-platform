@@ -17,7 +17,8 @@ def test_post_item_returns_created_item() -> None:
         category_id=1,
         name="Chicken",
         default_unit="lb",
-        restock_point=Decimal("2")
+        restock_point=Decimal("2"),
+        target_stock=Decimal("5")
     )
 
     with patch("src.api.routes.inventory.item.create_inventory_item") as mock_create_inventory_item:
@@ -30,6 +31,7 @@ def test_post_item_returns_created_item() -> None:
                 "category_id": 1,
                 "default_unit": "lb",
                 "restock_point": "2",
+                "target_stock": "5"
             },
         )
 
@@ -40,6 +42,7 @@ def test_post_item_returns_created_item() -> None:
             "name": "Chicken",
             "default_unit": "lb",
             "restock_point": "2",
+            "target_stock": "5"
         }
 
         kwargs = mock_create_inventory_item.call_args.kwargs
@@ -127,8 +130,10 @@ def test_get_restock_status_returns_valid_status() -> None:
         name= "Chicken",
         current_quantity= Decimal("1"),
         restock_point= Decimal("2"),
+        target_stock=Decimal("4"),
         unit= "lb",
-        needs_restock= True
+        needs_restock= True,
+        suggested_purchase_quantity=Decimal("3")
     )
 
     with patch("src.api.routes.inventory.item.get_restock_status") as mock_get_restock_status:
@@ -144,7 +149,9 @@ def test_get_restock_status_returns_valid_status() -> None:
             "current_quantity": "1",
             "restock_point": "2",
             "unit": "lb",
-            "needs_restock": True
+            "needs_restock": True,
+            "target_stock": "4",
+            "suggested_purchase_quantity": "3"
         }
         kwargs = mock_get_restock_status.call_args.kwargs
 
@@ -172,9 +179,9 @@ def test_get_restock_status_rejects_missing_item() -> None:
         assert "session" in kwargs
 
 def test_get_all_items_needing_restock_returns_valid_list() -> None:
-    fake_response_1 = RestockStatusResponse(name="Chicken", current_quantity=Decimal("2"), restock_point=Decimal("2"), unit="lb", needs_restock=True)
-    fake_response_2 = RestockStatusResponse(name="Steak", current_quantity=Decimal("2"), restock_point=Decimal("4"), unit="lb", needs_restock=True)
-    fake_response_3 = RestockStatusResponse(name="Milk", current_quantity=Decimal("0"), restock_point=Decimal("0"), unit="gal", needs_restock=True)
+    fake_response_1 = RestockStatusResponse(name="Chicken", current_quantity=Decimal("2"), restock_point=Decimal("2"), target_stock=Decimal("4"),unit="lb", needs_restock=True, suggested_purchase_quantity=Decimal("2"))
+    fake_response_2 = RestockStatusResponse(name="Steak", current_quantity=Decimal("2"), restock_point=Decimal("4"), target_stock=None, unit="lb", needs_restock=True, suggested_purchase_quantity=Decimal("3"))
+    fake_response_3 = RestockStatusResponse(name="Milk", current_quantity=Decimal("0"), restock_point=Decimal("0"), target_stock=Decimal("3"),unit="gal", needs_restock=True, suggested_purchase_quantity=Decimal("3"))
 
     with patch("src.api.routes.inventory.item.get_items_needing_restock") as mock_get_items_needing_restock:
         mock_get_items_needing_restock.return_value = [fake_response_1, fake_response_2, fake_response_3]
@@ -193,21 +200,27 @@ def test_get_all_items_needing_restock_returns_valid_list() -> None:
             "current_quantity": "2",
             "restock_point": "2",
             "unit": "lb",
-            "needs_restock": True
+            "needs_restock": True,
+            "target_stock": "4",
+            "suggested_purchase_quantity": "2"
         }
         assert body[1] == {
             "name": "Steak",
             "current_quantity": "2",
             "restock_point": "4",
             "unit": "lb",
-            "needs_restock": True
+            "needs_restock": True,
+            "target_stock": None,
+            "suggested_purchase_quantity": "3"
         }
         assert body[2] == {
             "name": "Milk",
             "current_quantity": "0",
             "restock_point": "0",
             "unit": "gal",
-            "needs_restock": True
+            "needs_restock": True,
+            "target_stock": "3",
+            "suggested_purchase_quantity": "3"
         }
 
         kwargs = mock_get_items_needing_restock.call_args.kwargs

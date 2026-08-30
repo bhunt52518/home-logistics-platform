@@ -17,16 +17,22 @@ def get_restock_status(session: Session, item_id: int) -> RestockStatusResponse:
     item_quantity = get_item_inventory_quantity(session=session, item_id=item_id)
 
     needs_restock = False
-
-    if item.restock_point is None:
-        needs_restock = False
-    else:
+    if item.restock_point is not None:
         needs_restock = item_quantity.total_quantity <= item.restock_point
 
+    suggested_purchase_quantity = None
+    if needs_restock:
+        if item.target_stock is not None:
+            suggested_purchase_quantity = item.target_stock - item_quantity.total_quantity
+        else:
+            suggested_purchase_quantity = (item.restock_point - item_quantity.total_quantity) + Decimal("1")
+        suggested_purchase_quantity = max(suggested_purchase_quantity, Decimal("0"))
 
-    restock_status = RestockStatusResponse(name=item.name, current_quantity=item_quantity.total_quantity,
-                                           unit=item_quantity.unit, restock_point=item.restock_point, needs_restock=needs_restock)
-
+    restock_status = RestockStatusResponse(
+        name=item.name, current_quantity=item_quantity.total_quantity, unit=item_quantity.unit, restock_point=item.restock_point,
+        target_stock=item.target_stock, needs_restock=needs_restock, suggested_purchase_quantity=suggested_purchase_quantity
+    )
+    
     return restock_status
 
 def get_items_needing_restock(session: Session) -> list[RestockStatusResponse]:

@@ -13,3 +13,4 @@ class ItemDB(Base):
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey("categories.id"), nullable=False)
     default_unit: Mapped[str] = mapped_column(String, nullable=False)
     restock_point: Mapped[Decimal | None] = mapped_column(Numeric, nullable=True)
+    target_stock: Mapped[Decimal | None] = mapped_column(Numeric, nullable=True)

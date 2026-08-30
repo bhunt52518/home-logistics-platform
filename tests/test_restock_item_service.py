@@ -16,7 +16,7 @@ import pytest
 
 def test_get_restock_status_returns_false_when_above_restock_point() -> None:
     fake_session = MagicMock()
-    fake_item = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("2"))
+    fake_item = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("2"), target_stock=Decimal("5"))
     fake_quantity_response = ItemQuantityResponse(name="Chicken", total_quantity=Decimal("6"), unit="lb")
 
     with (patch("src.domains.inventory.services.restock_item_service.get_item") as mock_get_item,
@@ -30,11 +30,13 @@ def test_get_restock_status_returns_false_when_above_restock_point() -> None:
         assert result.name == "Chicken"
         assert result.current_quantity == Decimal("6")
         assert result.restock_point == Decimal("2")
+        assert result.target_stock == Decimal("5")
         assert result.unit == "lb"
+        assert result.suggested_purchase_quantity == None
 
 def test_get_restock_status_returns_true_when_equal_to_restock_point() -> None:
     fake_session = MagicMock()
-    fake_item = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("2"))
+    fake_item = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("2"), target_stock=None)
     fake_quantity_response = ItemQuantityResponse(name="Chicken", total_quantity=Decimal("2"), unit="lb")
 
     with (patch("src.domains.inventory.services.restock_item_service.get_item") as mock_get_item,
@@ -48,11 +50,13 @@ def test_get_restock_status_returns_true_when_equal_to_restock_point() -> None:
         assert result.name == "Chicken"
         assert result.current_quantity == Decimal("2")
         assert result.restock_point == Decimal("2")
+        assert result.target_stock == None
         assert result.unit == "lb"
+        assert result.suggested_purchase_quantity == Decimal("1")
 
 def test_get_restock_status_returns_true_when_below_restock_point() -> None:
     fake_session = MagicMock()
-    fake_item = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("2"))
+    fake_item = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("2"), target_stock=Decimal("5"))
     fake_quantity_response = ItemQuantityResponse(name="Chicken", total_quantity=Decimal("1"), unit="lb")
 
     with (patch("src.domains.inventory.services.restock_item_service.get_item") as mock_get_item,
@@ -66,7 +70,9 @@ def test_get_restock_status_returns_true_when_below_restock_point() -> None:
         assert result.name == "Chicken"
         assert result.current_quantity == Decimal("1")
         assert result.restock_point == Decimal("2")
+        assert result.target_stock == Decimal("5")
         assert result.unit == "lb"
+        assert result.suggested_purchase_quantity == Decimal("4")
 
 def test_get_restock_status_returns_false_when_restock_point_is_none() -> None:
     fake_session = MagicMock()
@@ -100,10 +106,10 @@ def test_get_items_needing_restocked() -> None:
     fake_item_3 = ItemDB(id=3, name="Steak", category_id=1, default_unit="lb", restock_point=Decimal("1"))
     fake_item_4 = ItemDB(id=4, name="Oatmeal", category_id=3, default_unit="box", restock_point=Decimal("0"))
 
-    fake_restock_response_1 = RestockStatusResponse(name="Chicken",current_quantity=Decimal("1"), restock_point=Decimal("2"), unit="lb", needs_restock=True)
-    fake_restock_response_2 = RestockStatusResponse(name="Milk",current_quantity=Decimal("1"), restock_point=None, unit="gal", needs_restock=False)
-    fake_restock_response_3 = RestockStatusResponse(name="Steak",current_quantity=Decimal("2"), restock_point=Decimal("1"), unit="lb", needs_restock=False)
-    fake_restock_response_4 = RestockStatusResponse(name="Oatmeal",current_quantity=Decimal("0"), restock_point=Decimal("0"), unit="lb", needs_restock=True)
+    fake_restock_response_1 = RestockStatusResponse(name="Chicken",current_quantity=Decimal("1"), restock_point=Decimal("2"), unit="lb", target_stock=Decimal("5"),needs_restock=True, suggested_purchase_quantity=Decimal("4"))
+    fake_restock_response_2 = RestockStatusResponse(name="Milk",current_quantity=Decimal("1"), restock_point=None, unit="gal", target_stock=Decimal("2"), needs_restock=False, suggested_purchase_quantity=None)
+    fake_restock_response_3 = RestockStatusResponse(name="Steak",current_quantity=Decimal("2"), restock_point=Decimal("1"), target_stock=Decimal("3"), unit="lb", needs_restock=False, suggested_purchase_quantity=None)
+    fake_restock_response_4 = RestockStatusResponse(name="Oatmeal",current_quantity=Decimal("0"), restock_point=Decimal("0"), target_stock=None, unit="lb", needs_restock=True, suggested_purchase_quantity=Decimal("1"))
     
     fake_items = [fake_item_1, fake_item_2, fake_item_3, fake_item_4]
 
@@ -131,10 +137,10 @@ def test_get_items_needing_restocked_returns_empty_list() -> None:
     fake_item_3 = ItemDB(id=3, name="Steak", category_id=1, default_unit="lb", restock_point=Decimal("1"))
     fake_item_4 = ItemDB(id=4, name="Oatmeal", category_id=3, default_unit="box", restock_point=Decimal("0"))
 
-    fake_restock_response_1 = RestockStatusResponse(name="Chicken",current_quantity=Decimal("6"), restock_point=Decimal("2"), unit="lb", needs_restock=False)
-    fake_restock_response_2 = RestockStatusResponse(name="Milk",current_quantity=Decimal("1"), restock_point=None, unit="gal", needs_restock=False)
-    fake_restock_response_3 = RestockStatusResponse(name="Steak",current_quantity=Decimal("2"), restock_point=Decimal("1"), unit="lb", needs_restock=False)
-    fake_restock_response_4 = RestockStatusResponse(name="Oatmeal",current_quantity=Decimal("1"), restock_point=Decimal("0"), unit="lb", needs_restock=False)
+    fake_restock_response_1 = RestockStatusResponse(name="Chicken",current_quantity=Decimal("6"), restock_point=Decimal("2"), unit="lb", target_stock=Decimal("6"), needs_restock=False, suggested_purchase_quantity=None)
+    fake_restock_response_2 = RestockStatusResponse(name="Milk",current_quantity=Decimal("1"), restock_point=None, unit="gal", target_stock=None, needs_restock=False, suggested_purchase_quantity=None)
+    fake_restock_response_3 = RestockStatusResponse(name="Steak",current_quantity=Decimal("2"), restock_point=Decimal("1"), unit="lb", target_stock=Decimal("2"), needs_restock=False, suggested_purchase_quantity=None)
+    fake_restock_response_4 = RestockStatusResponse(name="Oatmeal",current_quantity=Decimal("1"), restock_point=Decimal("0"), target_stock=None, unit="lb", needs_restock=False, suggested_purchase_quantity=None)
     
     fake_items = [fake_item_1, fake_item_2, fake_item_3, fake_item_4]
 

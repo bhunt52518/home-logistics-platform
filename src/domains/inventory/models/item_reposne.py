@@ -12,3 +12,4 @@ class ItemResponse(BaseModel):
     category_id: int
     default_unit: str
     restock_point: Decimal | None
+    target_stock: Decimal | None

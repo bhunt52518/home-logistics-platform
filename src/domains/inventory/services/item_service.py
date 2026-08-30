@@ -6,7 +6,7 @@ from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.repositories.inventory_repository import (create_item, get_category)
 from src.core.services.unit_conversion_service import normalize_unit
 
-def create_inventory_item(session: Session, name: str, category_id: int, default_unit: str, restock_point: Decimal | None = None) -> ItemDB:
+def create_inventory_item(session: Session, name: str, category_id: int, default_unit: str, restock_point: Decimal | None = None, target_stock: Decimal | None = None) -> ItemDB:
 
     category = get_category(session=session, category_id=category_id)
 
@@ -15,7 +15,7 @@ def create_inventory_item(session: Session, name: str, category_id: int, default
 
     normalized_unit = normalize_unit(default_unit)
 
-    item = ItemCreate(name=name, category_id=category.id, default_unit=normalized_unit, restock_point=restock_point)
+    item = ItemCreate(name=name, category_id=category.id, default_unit=normalized_unit, restock_point=restock_point, target_stock=target_stock)
 
     saved_item = create_item(session=session, item=item)
 
