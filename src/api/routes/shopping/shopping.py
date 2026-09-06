@@ -6,7 +6,7 @@ from src.domains.shopping.models.shopping_list_merge_suggestion_response import 
 from src.domains.shopping.models.shopping_list_item import ShoppingListItem
 from src.domains.shopping.models.shopping_list_merge_suggestion import ShoppingListMergeSuggestion
 from src.domains.shopping.services.shopping_list_service import (
-    add_shopping_list_item, approve_shopping_list_merge_suggestion
+    add_shopping_list_item, approve_shopping_list_merge_suggestion, get_active_shopping_list
 )
 from src.database.session import get_db
 
@@ -34,5 +34,16 @@ def post_add_shopping_list_item(shopping_list_item: ShoppingListItem, session: S
 def post_approve_shopping_list_merge_suggestion(merge_suggestion: ShoppingListMergeSuggestion, session: Session=Depends(get_db)):
     try:
         return approve_shopping_list_merge_suggestion(session=session, merge_suggestion=merge_suggestion)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+@router.get(
+    "/list", response_model= list[ShoppingListItemResponse], status_code=200
+)
+
+def get_shopping_list(session: Session=Depends(get_db)) -> list[ShoppingListItemResponse]:
+    
+    try:
+        return get_active_shopping_list(session=session)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error

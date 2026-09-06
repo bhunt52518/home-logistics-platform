@@ -7,7 +7,8 @@ from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.shopping.models.shopping_list_merge_suggestion import ShoppingListMergeSuggestion
 from src.domains.shopping.models.shopping_list_item_response import ShoppingListItemResponse
 from src.domains.shopping.models.shopping_list_source import ShoppingListSource
-from src.domains.shopping.services.shopping_list_service import add_shopping_list_item, approve_shopping_list_merge_suggestion
+from src.domains.shopping.services.shopping_list_service import (
+    add_shopping_list_item, approve_shopping_list_merge_suggestion, get_active_shopping_list)
 from src.main import app
 
 
@@ -140,3 +141,48 @@ def test_approve_shopping_list_merge_seggestion_returns_updated_list() -> None:
         assert requst_sent_to_service.merged_quantity == Decimal("5")
         assert requst_sent_to_service.name == "Chicken"
         assert requst_sent_to_service.unit == "lb"
+
+def test_get_active_shopping_list_returns_valid_response() -> None:
+    fake_item_1 = ShoppingListItemDB(
+            id=1, item_id=1, name="Birthday Candles", quantity=Decimal("1"), unit="pack",
+            source=ShoppingListSource.MANUAL, purchased=False
+        )
+    fake_item_2 = ShoppingListItemDB(
+                id=2, item_id=2, name="Chicken", quantity=Decimal("1"), unit="lb",
+                source=ShoppingListSource.MANUAL, purchased=False
+            )
+
+    with patch("src.api.routes.shopping.shopping.get_active_shopping_list") as mock_get_active_list:
+        mock_get_active_list.return_value = [fake_item_1, fake_item_2]
+
+        response = client.get(
+            "/shopping/list"
+        )
+
+        body = response.json()
+
+        assert response.status_code == 200
+        assert len(body) == 2
+
+        assert body[0] == {
+            "id": 1,
+            "item_id": 1,
+            "name": "Birthday Candles",
+            "quantity": "1",
+            "unit": "pack",
+            "source": "manual",
+            "purchased": False
+        }
+
+        assert body[1] == {
+            "id": 2,
+            "item_id": 2,
+            "name": "Chicken",
+            "quantity": "1",
+            "unit": "lb",
+            "source": "manual",
+            "purchased": False
+        }
+
+        kwargs = mock_get_active_list.call_args.kwargs
+        assert "session" in kwargs

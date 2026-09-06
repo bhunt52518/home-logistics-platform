@@ -3,9 +3,13 @@ from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.shopping.models.shopping_list_item import ShoppingListItem
 from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.persistence.category_db import CategoryDB
+from src.domains.inventory.persistence.household_db import HouseholdDB
+from src.domains.inventory.persistence.inventory_record_db import InventoryRecordDB
+from src.domains.inventory.persistence.location_db import LocationDB
 from src.domains.shopping.models.shopping_list_source import ShoppingListSource
 from src.domains.shopping.repositories.shopping_repository import (
-    create_shopping_list_item, get_shopping_list_item,get_duplicate_shopping_list_item, update_shopping_list_quantity)
+    create_shopping_list_item, get_shopping_list_item,get_duplicate_shopping_list_item, update_shopping_list_quantity,
+    get_active_shopping_list_items)
 
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
@@ -155,4 +159,32 @@ def test_update_shopping_list_quantity() -> None:
         assert result.source == ShoppingListSource.RESTOCK
         assert result.item_id == 1
         assert result.purchased == False
+
+def test_get_active_shopping_list_items_returns_valid_list() -> None:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        item_1 = ShoppingListItemDB(
+            id=1, item_id=1, name="Chicken", quantity=Decimal("3"), unit="lb",
+            source=ShoppingListSource.RESTOCK, purchased=False)
+        item_2 = ShoppingListItemDB(
+            id=2, item_id=2, name="Milk", quantity=Decimal("2"), unit="gal",
+            source=ShoppingListSource.RESTOCK, purchased=False)
+        item_3 = ShoppingListItemDB(
+            id=4, item_id=4, name="Candles", quantity=Decimal("3"), unit="lb",
+            source=ShoppingListSource.RESTOCK, purchased=True)
+        items_db = [item_1, item_2, item_3]
+
+        session.add_all(items_db)
+        session.commit()
+
+
+        result = get_active_shopping_list_items(session=session)
+        result_names = [item.name for item in result]
+
+        assert len(result) == 2
+        assert "Chicken" in result_names
+        assert "Milk" in result_names
+
 

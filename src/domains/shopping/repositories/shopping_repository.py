@@ -43,6 +43,11 @@ def get_duplicate_shopping_list_item (session: Session, shopping_list_db: Shoppi
         ).first()
         return duplicate_item
 
+def get_active_shopping_list_items(session: Session) -> list[ShoppingListItemDB]:
+    active_shopping_list_items = session.query(ShoppingListItemDB).filter(ShoppingListItemDB.purchased==False).all()
+
+    return active_shopping_list_items
+
 def update_shopping_list_quantity(session: Session, shopping_list: ShoppingListItemDB, quantity: Decimal) -> ShoppingListItemDB:
     shopping_list.quantity=quantity
     
@@ -55,3 +60,17 @@ def update_shopping_list_quantity(session: Session, shopping_list: ShoppingListI
     session.refresh(shopping_list)
 
     return shopping_list
+
+def update_shopping_list_item_as_purchased(session: Session, shopping_list_item_id: int, purchased: bool) -> ShoppingListItemDB:
+    purchased_shopping_list_item = get_shopping_list_item(session=session, shopping_list_id=shopping_list_item_id)
+    if purchased_shopping_list_item is None:
+        raise ValueError("Shopping list item does not exist.")
+    purchased_shopping_list_item.purchased = purchased
+
+    try:
+        session.commit()
+        session.refresh(purchased_shopping_list_item)
+        return purchased_shopping_list_item
+    except Exception:
+        session.rollback()
+        raise

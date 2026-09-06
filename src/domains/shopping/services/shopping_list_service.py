@@ -2,7 +2,8 @@ from src.domains.shopping.models.shopping_list_item import ShoppingListItem
 from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.shopping.models.shopping_list_merge_suggestion import ShoppingListMergeSuggestion
 from src.domains.shopping.repositories.shopping_repository import (
-    get_duplicate_shopping_list_item, create_shopping_list_item, get_shopping_list_item, update_shopping_list_quantity)
+    get_duplicate_shopping_list_item, create_shopping_list_item, get_shopping_list_item, update_shopping_list_quantity,
+    get_active_shopping_list_items)
 
 from sqlalchemy.orm import Session
 
@@ -36,3 +37,8 @@ def approve_shopping_list_merge_suggestion(session: Session, merge_suggestion: S
         raise ValueError("Existing quantity does not match.")
 
     return update_shopping_list_quantity(session=session, shopping_list=existing_item, quantity=merge_suggestion.merged_quantity)
+
+def get_active_shopping_list(session: Session) -> list[ShoppingListItemDB]:
+    active_shopping_list = get_active_shopping_list_items(session=session)
+
+    return active_shopping_list

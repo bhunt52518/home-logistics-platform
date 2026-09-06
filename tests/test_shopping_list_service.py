@@ -1,5 +1,6 @@
-from src.domains.shopping.services.shopping_list_service import add_shopping_list_item, get_duplicate_shopping_list_item
-from src.domains.shopping.services.shopping_list_service import create_shopping_list_item, approve_shopping_list_merge_suggestion
+from src.domains.shopping.services.shopping_list_service import (
+    add_shopping_list_item, get_duplicate_shopping_list_item, create_shopping_list_item, approve_shopping_list_merge_suggestion,
+    get_active_shopping_list)
 from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.shopping.models.shopping_list_source import ShoppingListSource
 from src.domains.shopping.models.shopping_list_item import ShoppingListItem
@@ -139,6 +140,25 @@ def test_approve_shopping_list_merge_suggestion_rejects_existing_item_quantity_c
                  approve_shopping_list_merge_suggestion(session=fake_session, merge_suggestion=fake_merge_suggestion)
 
                  mock_update_shopping_list_quantity.assert_not_called()
+
+def test_get_active_shopping_list_returns_valid_list() -> None:
+    fake_session = MagicMock()
+    item_1 = ShoppingListItemDB(
+        id=1, item_id=1, name="Chicken", quantity=Decimal("3"), unit="lb",
+        source=ShoppingListSource.RESTOCK, purchased=False)
+    item_2 = ShoppingListItemDB(
+        id=2, item_id=2, name="Milk", quantity=Decimal("2"), unit="gal",
+        source=ShoppingListSource.RESTOCK, purchased=False)
+
+
+    with patch("src.domains.shopping.services.shopping_list_service.get_active_shopping_list_items") as mock_get_active_shopping_list_items:
+        mock_get_active_shopping_list_items.return_value = [item_1, item_2]
+
+        result = get_active_shopping_list(session=fake_session)
+
+        assert len(result) == 2
+        mock_get_active_shopping_list_items.assert_called_once()
+    
 
 
 
