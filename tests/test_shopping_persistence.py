@@ -9,7 +9,7 @@ from src.domains.inventory.persistence.location_db import LocationDB
 from src.domains.shopping.models.shopping_list_source import ShoppingListSource
 from src.domains.shopping.repositories.shopping_repository import (
     create_shopping_list_item, get_shopping_list_item,get_duplicate_shopping_list_item, update_shopping_list_quantity,
-    get_active_shopping_list_items, update_shopping_list_item_as_purchased)
+    get_active_shopping_list_items, update_shopping_list_item_as_purchased, get_purchased_shopping_list_items)
 
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
@@ -226,4 +226,30 @@ def test_update_shopping_list_item_as_purchased_returns_error() -> None:
             update_shopping_list_item_as_purchased(
                 session=session, shopping_list_item_id=999, purchased=True)
 
+def test_get_purchased_shopping_list_items_returns_valid_list() -> None:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        item_1 = ShoppingListItemDB(
+            id=1, item_id=1, name="Chicken", quantity=Decimal("3"), unit="lb",
+            source=ShoppingListSource.RESTOCK, purchased=True)
+        item_2 = ShoppingListItemDB(
+            id=2, item_id=2, name="Milk", quantity=Decimal("2"), unit="gal",
+            source=ShoppingListSource.RESTOCK, purchased=True)
+        item_3 = ShoppingListItemDB(
+            id=4, item_id=4, name="Candles", quantity=Decimal("3"), unit="lb",
+            source=ShoppingListSource.RESTOCK, purchased=False)
+        items_db = [item_1, item_2, item_3]
+
+        session.add_all(items_db)
+        session.commit()
+
+
+        result = get_purchased_shopping_list_items(session=session)
+        result_names = [item.name for item in result]
+
+        assert len(result) == 2
+        assert "Chicken" in result_names
+        assert "Milk" in result_names
 

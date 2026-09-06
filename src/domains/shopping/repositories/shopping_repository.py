@@ -48,6 +48,11 @@ def get_active_shopping_list_items(session: Session) -> list[ShoppingListItemDB]
 
     return active_shopping_list_items
 
+def get_purchased_shopping_list_items(session: Session) -> list[ShoppingListItemDB]:
+    purchased_shoping_list_items = session.query(ShoppingListItemDB).filter(ShoppingListItemDB.purchased==True).all()
+
+    return purchased_shoping_list_items
+
 def update_shopping_list_quantity(session: Session, shopping_list: ShoppingListItemDB, quantity: Decimal) -> ShoppingListItemDB:
     shopping_list.quantity=quantity
     

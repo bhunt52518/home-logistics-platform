@@ -3,7 +3,7 @@ from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.shopping.models.shopping_list_merge_suggestion import ShoppingListMergeSuggestion
 from src.domains.shopping.repositories.shopping_repository import (
     get_duplicate_shopping_list_item, create_shopping_list_item, get_shopping_list_item, update_shopping_list_quantity,
-    get_active_shopping_list_items, update_shopping_list_item_as_purchased)
+    get_active_shopping_list_items, update_shopping_list_item_as_purchased, get_purchased_shopping_list_items)
 
 from sqlalchemy.orm import Session
 
@@ -48,3 +48,8 @@ def mark_shopping_list_item_as_purchased(session: Session, shopping_list_item_id
         session=session, shopping_list_item_id=shopping_list_item_id, purchased=True)
 
     return updated_shopping_list_item
+
+def get_purchased_items(session: Session) -> list[ShoppingListItemDB]:
+    purchased_items = get_purchased_shopping_list_items(session=session)
+
+    return purchased_items
