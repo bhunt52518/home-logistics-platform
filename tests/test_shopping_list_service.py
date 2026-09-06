@@ -1,6 +1,6 @@
 from src.domains.shopping.services.shopping_list_service import (
     add_shopping_list_item, get_duplicate_shopping_list_item, create_shopping_list_item, approve_shopping_list_merge_suggestion,
-    get_active_shopping_list)
+    get_active_shopping_list, mark_shopping_list_item_as_purchased)
 from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.shopping.models.shopping_list_source import ShoppingListSource
 from src.domains.shopping.models.shopping_list_item import ShoppingListItem
@@ -158,6 +158,22 @@ def test_get_active_shopping_list_returns_valid_list() -> None:
 
         assert len(result) == 2
         mock_get_active_shopping_list_items.assert_called_once()
+
+def test_mark_shopping_list_item_as_purchased() -> None:
+    fake_session = MagicMock()
+    fake_updated_item = ShoppingListItemDB(
+        id=1, item_id=1, name="Chicken", quantity=Decimal("3"), unit="lb",
+        source=ShoppingListSource.RESTOCK, purchased=True)
+
+    with patch("src.domains.shopping.services.shopping_list_service.update_shopping_list_item_as_purchased") as mock_update_item:
+        mock_update_item.return_value = fake_updated_item
+
+        result = mark_shopping_list_item_as_purchased(session=fake_session, shopping_list_item_id=1)
+
+        assert result.purchased is True
+        assert result.item_id == 1
+
+
     
 
 

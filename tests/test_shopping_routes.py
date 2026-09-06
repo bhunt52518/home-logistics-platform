@@ -186,3 +186,24 @@ def test_get_active_shopping_list_returns_valid_response() -> None:
 
         kwargs = mock_get_active_list.call_args.kwargs
         assert "session" in kwargs
+
+def test_patch_shopping_list_item_as_purchased() -> None:
+    fake_updated_item = ShoppingListItemDB(
+        id=1, item_id=1, name="Chicken", quantity=Decimal("3"), unit="lb",
+        source=ShoppingListSource.RESTOCK, purchased=True
+    )
+
+    with patch("src.api.routes.shopping.shopping.mark_shopping_list_item_as_purchased") as mock_update_item:
+        mock_update_item.return_value = fake_updated_item
+
+        response = client.patch(
+            "/shopping/item/1/purchased"
+        )
+
+        assert response.status_code == 200
+        assert response.json()["purchased"] is True
+
+        kwargs = mock_update_item.call_args.kwargs
+
+        assert kwargs["session"] is not None
+        assert kwargs["shopping_list_item_id"] == 1
