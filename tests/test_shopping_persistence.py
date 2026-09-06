@@ -4,8 +4,8 @@ from src.domains.shopping.models.shopping_list_item import ShoppingListItem
 from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.persistence.category_db import CategoryDB
 from src.domains.shopping.models.shopping_list_source import ShoppingListSource
-from src.domains.shopping.repositories.shopping_repository import (create_shopping_list_item, get_shopping_list_item,
-                                                                   get_dulicate_shopping_list_item)
+from src.domains.shopping.repositories.shopping_repository import (
+    create_shopping_list_item, get_shopping_list_item,get_duplicate_shopping_list_item, update_shopping_list_quantity)
 
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
@@ -23,7 +23,7 @@ def test_shopping_list_persistence_creates_expected_table() -> None:
     inspector = inspect(engine)
     table_names = inspector.get_table_names()
 
-    assert set(table_names) == {"shopping_list_items", "categories", "items"}
+    assert set(table_names) == {"shopping_list_items", "categories", "items", "households", "inventory_records", "locations"}
 
 def test_shopping_list_can_be_saved_and_retrieved() -> None:
     engine = create_engine("sqlite:///:memory:")
@@ -68,7 +68,7 @@ def test_shopping_list_returns_duplicate_entry() -> None:
         )
 
         saved_item = create_shopping_list_item(session=session, shopping_list=existing_item)
-        result = get_dulicate_shopping_list_item(session=session, shopping_list_db=new_item)
+        result = get_duplicate_shopping_list_item(session=session, shopping_list_db=new_item)
 
         assert result is not None
         assert result.id == saved_item.id
@@ -89,7 +89,7 @@ def test_shopping_list_returns_duplicate_entry_without_item_id() -> None:
         )
 
         saved_item = create_shopping_list_item(session=session, shopping_list=existing_item)
-        result = get_dulicate_shopping_list_item(session=session, shopping_list_db=new_item)
+        result = get_duplicate_shopping_list_item(session=session, shopping_list_db=new_item)
 
         assert result is not None
         assert result.name == "chicken"
@@ -110,7 +110,7 @@ def test_shopping_list_returns_none() -> None:
         )
 
         saved_item = create_shopping_list_item(session=session, shopping_list=existing_item)
-        result = get_dulicate_shopping_list_item(session=session, shopping_list_db=new_item)
+        result = get_duplicate_shopping_list_item(session=session, shopping_list_db=new_item)
 
         assert result is None
 
@@ -129,6 +129,30 @@ def test_shopping_list_returns_none_when_purchased_true() -> None:
         )
 
         saved_item = create_shopping_list_item(session=session, shopping_list=existing_item)
-        result = get_dulicate_shopping_list_item(session=session, shopping_list_db=new_item)
+        result = get_duplicate_shopping_list_item(session=session, shopping_list_db=new_item)
 
         assert result is None
+
+def test_update_shopping_list_quantity() -> None:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        existing_list = ShoppingListItemDB(
+            name="Chicken", quantity=Decimal("2"), unit="lb", source=ShoppingListSource.RESTOCK,
+            item_id=1, purchased=False
+        )
+
+        session.add(existing_list)
+        session.commit()
+        session.refresh(existing_list)
+
+        result = update_shopping_list_quantity(session=session, shopping_list=existing_list, quantity=Decimal("5"))
+
+        assert result.name == "Chicken"
+        assert result.quantity == Decimal("5")
+        assert result.unit == "lb"
+        assert result.source == ShoppingListSource.RESTOCK
+        assert result.item_id == 1
+        assert result.purchased == False
+

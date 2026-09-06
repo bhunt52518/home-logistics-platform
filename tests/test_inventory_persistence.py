@@ -32,6 +32,7 @@ def test_inventory_persistence_creates_expected_tables() -> None:
         "inventory_records",
         "items",
         "locations",
+        "shopping_list_items"
     }
 
 def test_household_can_be_saved_and_retrieved() -> None:

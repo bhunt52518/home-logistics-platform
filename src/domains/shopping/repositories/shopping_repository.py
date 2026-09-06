@@ -5,6 +5,7 @@ from src.core.services.name_validator import NameValidator
 
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from decimal import Decimal
 
 
 
@@ -24,7 +25,7 @@ def get_shopping_list_item(session: Session, shopping_list_id: int) -> ShoppingL
 
     return session.get(ShoppingListItemDB, shopping_list_id)
 
-def get_dulicate_shopping_list_item (session: Session, shopping_list_db: ShoppingListItemDB) -> ShoppingListItemDB | None:
+def get_duplicate_shopping_list_item (session: Session, shopping_list_db: ShoppingListItemDB) -> ShoppingListItemDB | None:
 
     if shopping_list_db.item_id is not None:
         same_item_id = session.query(ShoppingListItemDB).filter(
@@ -41,3 +42,16 @@ def get_dulicate_shopping_list_item (session: Session, shopping_list_db: Shoppin
             ShoppingListItemDB.purchased==False
         ).first()
         return duplicate_item
+
+def update_shopping_list_quantity(session: Session, shopping_list: ShoppingListItemDB, quantity: Decimal) -> ShoppingListItemDB:
+    shopping_list.quantity=quantity
+    
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
+    session.refresh(shopping_list)
+
+    return shopping_list

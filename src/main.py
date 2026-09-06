@@ -8,6 +8,7 @@ from src.api.routes.inventory.category import router as category_router
 from src.api.routes.inventory.locations import router as location_router
 from src.api.routes.inventory.item import router as item_router
 from src.api.routes.inventory.consumption import router as consumption_router
+from src.api.routes.shopping.shopping import router as shopping_router
 
 from src.core.config import get_settings
 from src.database.init_db import initialize_database
@@ -30,6 +31,8 @@ app.include_router(category_router, prefix="/inventory", tags=["Inventory"])
 app.include_router(location_router, prefix="/inventory", tags=["Inventory"] )
 app.include_router(item_router, prefix="/inventory", tags=["Inventory"])
 app.include_router(consumption_router, prefix="/inventory", tags=["Inventory"])
+app.include_router(households_router, prefix="/inventory", tags=["Inventory"])
+app.include_router(shopping_router, prefix="/shopping", tags=["Shopping"])
 
 @app.on_event("startup")
 def startup() -> None:
@@ -45,9 +48,5 @@ def root() -> dict[str, str]:
         "status": "/inventory/health", 
     }
 
-app.include_router(
-    households_router,
-    prefix="/inventory",
-    tags=["Inventory"],
-)
+
 
