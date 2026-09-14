@@ -13,3 +13,4 @@ class ShoppingListItem (BaseModel):
     unit: str
     source: ShoppingListSource
     purchased: bool = False
+    stocked: bool = False

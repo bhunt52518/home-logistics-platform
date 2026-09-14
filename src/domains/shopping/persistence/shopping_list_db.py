@@ -20,3 +20,4 @@ class ShoppingListItemDB(Base):
     unit: Mapped[str] = mapped_column(String, nullable=False)
     source: Mapped[ShoppingListSource] = mapped_column(Enum(ShoppingListSource), nullable=False)
     purchased: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    stocked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

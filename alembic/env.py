@@ -8,6 +8,7 @@ from alembic import context
 from src.database.base import Base
 
 from src.domains.inventory.persistence import category_db, household_db,inventory_record_db,item_db,location_db
+from src.domains.shopping.persistence import shopping_list_db
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

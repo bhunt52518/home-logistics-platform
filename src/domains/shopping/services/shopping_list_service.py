@@ -1,9 +1,13 @@
 from src.domains.shopping.models.shopping_list_item import ShoppingListItem
+from src.domains.shopping.models.stock_purchased_items_request import StockPurchasedItemRequest
 from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.shopping.models.shopping_list_merge_suggestion import ShoppingListMergeSuggestion
+from src.domains.inventory.models.item_allocation_request import ItemAllocationRequest
+from src.domains.inventory.services.allocation_service import process_allocation
 from src.domains.shopping.repositories.shopping_repository import (
     get_duplicate_shopping_list_item, create_shopping_list_item, get_shopping_list_item, update_shopping_list_quantity,
-    get_active_shopping_list_items, update_shopping_list_item_as_purchased, get_purchased_shopping_list_items)
+    get_active_shopping_list_items, update_shopping_list_item_as_purchased, get_purchased_shopping_list_items,
+    update_shopping_list_item_as_stocked)
 
 from sqlalchemy.orm import Session
 
@@ -53,3 +57,27 @@ def get_purchased_items(session: Session) -> list[ShoppingListItemDB]:
     purchased_items = get_purchased_shopping_list_items(session=session)
 
     return purchased_items
+
+def stock_purchased_item(session: Session, shopping_list_item_id: int, stock_request: StockPurchasedItemRequest) -> ShoppingListItemDB:
+    shopping_item_to_stock = get_shopping_list_item(session=session, shopping_list_id=shopping_list_item_id)
+
+    if shopping_item_to_stock is None:
+        raise ValueError("Shopping list item does not exist.")
+    elif shopping_item_to_stock.purchased is False:
+        raise ValueError("Shopping list item has not be purchased.")
+    elif shopping_item_to_stock.stocked is True:
+        raise ValueError("Shopping item has already been stocked.")
+    elif shopping_item_to_stock.item_id is None:
+        raise ValueError("Shopping list item is not linked to an inventory item.")
+
+    allocation_request = ItemAllocationRequest(
+        item_id=shopping_item_to_stock.item_id, purchased_quantity=shopping_item_to_stock.quantity,
+        item_unit=shopping_item_to_stock.unit, allocations=stock_request.allocations
+    )
+
+    process_allocation(session=session, allocation_request=allocation_request)
+
+    stocked_item = update_shopping_list_item_as_stocked(
+        session=session, shopping_list_item_id=shopping_item_to_stock.id, stocked=True)
+
+    return stocked_item

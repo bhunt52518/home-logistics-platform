@@ -79,3 +79,18 @@ def update_shopping_list_item_as_purchased(session: Session, shopping_list_item_
     except Exception:
         session.rollback()
         raise
+
+def update_shopping_list_item_as_stocked(session: Session, shopping_list_item_id: int, stocked: bool) -> ShoppingListItemDB:
+    shopping_list_item = get_shopping_list_item(session=session, shopping_list_id=shopping_list_item_id)
+    if shopping_list_item is None:
+        raise ValueError("Shopping list item does not exist.")
+
+    shopping_list_item.stocked = stocked
+
+    try:
+        session.commit()
+        session.refresh(shopping_list_item)
+        return shopping_list_item
+    except Exception:
+        session.rollback()
+        raise

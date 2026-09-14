@@ -1,14 +1,18 @@
 from src.domains.shopping.services.shopping_list_service import (
     add_shopping_list_item, get_duplicate_shopping_list_item, create_shopping_list_item, approve_shopping_list_merge_suggestion,
-    get_active_shopping_list, mark_shopping_list_item_as_purchased, get_purchased_items)
+    get_active_shopping_list, mark_shopping_list_item_as_purchased, get_purchased_items, stock_purchased_item)
 from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.shopping.models.shopping_list_source import ShoppingListSource
 from src.domains.shopping.models.shopping_list_item import ShoppingListItem
 from src.domains.shopping.models.shopping_list_merge_suggestion import ShoppingListMergeSuggestion
+from src.domains.shopping.models.stock_purchased_items_request import StockPurchasedItemRequest
+from src.domains.inventory.persistence.inventory_record_db import InventoryRecordDB
+from src.domains.inventory.models.inventory_allocation import InventoryAllocation
 
 from unittest.mock import MagicMock
 from unittest.mock import patch
 from decimal import Decimal
+from datetime import date
 
 import pytest
 
@@ -194,7 +198,134 @@ def test_get_purchased_items_returns_valid_list() -> None:
         kwargs = mock_get_purchased_items.call_args.kwargs
         assert kwargs["session"] is fake_session
 
-    
+def test_stock_purchase_item_returns_valid_stocked_item() -> None:
+    fake_session = MagicMock()
+    fake_stocked_item = ShoppingListItemDB(
+        item_id=1, name="Chicken", quantity=Decimal("5"), unit="lb", source=ShoppingListSource.RESTOCK,
+        purchased=True, stocked=True)
+    fake_shopping_list_item = ShoppingListItemDB(
+        item_id=1, name="Chicken", quantity=Decimal("5"), unit= "lb", source=ShoppingListSource.RESTOCK,
+        purchased=True, stocked=False)
+    fake_stock_request =  StockPurchasedItemRequest(
+         allocations=[InventoryAllocation(location_id=1, quantity=Decimal("2")),
+                      InventoryAllocation(location_id=2, quantity=Decimal("3"))])
+
+    with (patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_get_shopping_list_item,
+          patch("src.domains.shopping.services.shopping_list_service.process_allocation") as mock_process_allocation,
+          patch("src.domains.shopping.services.shopping_list_service.update_shopping_list_item_as_stocked") as mock_update_shopping_list_item_as_stocked):
+        mock_get_shopping_list_item.return_value = fake_shopping_list_item
+        mock_process_allocation.return_value = []
+        mock_update_shopping_list_item_as_stocked.return_value = fake_stocked_item
+
+        result = stock_purchased_item(session=fake_session, shopping_list_item_id=1, stock_request=fake_stock_request)
+
+        assert result.stocked is True
+        mock_process_allocation.assert_called_once()
+        mock_update_shopping_list_item_as_stocked.assert_called_once()
+        mock_process_allocation.assert_called_once()
+
+        allocation_request = mock_process_allocation.call_args.kwargs["allocation_request"]
+        assert allocation_request.item_id == 1
+        assert allocation_request.purchased_quantity == Decimal("5")
+        assert allocation_request.item_unit == "lb"
+        assert allocation_request.allocations == fake_stock_request.allocations
+
+def test_stock_purchase_item_returns_error_for_no_item() -> None:
+    fake_session = MagicMock()
+    fake_stock_request =  StockPurchasedItemRequest(
+        allocations=[InventoryAllocation(location_id=1, quantity=Decimal("2")),
+                     InventoryAllocation(location_id=2, quantity=Decimal("3"))])
+
+    with patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_get_shopping_list_item:
+        mock_get_shopping_list_item.return_value = None
+
+        with pytest.raises(ValueError) as error:
+            stock_purchased_item(session=fake_session, shopping_list_item_id=1, stock_request=fake_stock_request)
+
+            assert str(error.value) == "Shopping list item does not exist."
+
+def test_stock_purchase_item_returns_error_for_Item_not_purchased() -> None:
+    fake_session = MagicMock()
+    fake_shopping_list_item = ShoppingListItemDB(
+            item_id=1, name="Chicken", quantity=Decimal("5"), unit= "lb", source=ShoppingListSource.RESTOCK,
+            purchased=False, stocked=False)
+    fake_stock_request =  StockPurchasedItemRequest(
+        allocations=[InventoryAllocation(location_id=1, quantity=Decimal("2")),
+                     InventoryAllocation(location_id=2, quantity=Decimal("3"))])
+
+    with patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_get_shopping_list_item:
+        mock_get_shopping_list_item.return_value = fake_shopping_list_item
+
+        with pytest.raises(ValueError) as error:
+            stock_purchased_item(session=fake_session, shopping_list_item_id=1, stock_request=fake_stock_request)
+
+            assert str(error.value) == "Shopping list item has not be purchased."
+
+def test_stock_purchase_item_returns_error_for_Item_already_stocked() -> None:
+    fake_session = MagicMock()
+    fake_shopping_list_item = ShoppingListItemDB(
+            item_id=1, name="Chicken", quantity=Decimal("5"), unit= "lb", source=ShoppingListSource.RESTOCK,
+            purchased=True, stocked=True)
+    fake_stock_request =  StockPurchasedItemRequest(
+        allocations=[InventoryAllocation(location_id=1, quantity=Decimal("2")),
+                     InventoryAllocation(location_id=2, quantity=Decimal("3"))])
+
+    with patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_get_shopping_list_item:
+        mock_get_shopping_list_item.return_value = fake_shopping_list_item
+
+        with pytest.raises(ValueError) as error:
+            stock_purchased_item(session=fake_session, shopping_list_item_id=1, stock_request=fake_stock_request)
+
+            assert str(error.value) == "Shopping item has already been stocked."
+
+def test_stock_purchase_item_returns_error_for_Item_not_in_inventory() -> None:
+    fake_session = MagicMock()
+    fake_shopping_list_item = ShoppingListItemDB(
+            item_id=None, name=str, quantity=Decimal("5"), unit= "lb", source=ShoppingListSource.RESTOCK,
+            purchased=True, stocked=True)
+    fake_stock_request =  StockPurchasedItemRequest(
+        allocations=[InventoryAllocation(location_id=1, quantity=Decimal("2")),
+                     InventoryAllocation(location_id=2, quantity=Decimal("3"))])
+
+    with patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_get_shopping_list_item:
+        mock_get_shopping_list_item.return_value = fake_shopping_list_item
+
+        with pytest.raises(ValueError) as error:
+            stock_purchased_item(session=fake_session, shopping_list_item_id=1, stock_request=fake_stock_request)
+
+            assert str(error.value) == "Shopping list item is not linked to an inventory item."
+
+def test_stock_purchase_item_returns_error_for_allocation_not_matching() -> None:
+    fake_session = MagicMock()
+    fake_shopping_list_item = ShoppingListItemDB(
+        item_id=1, name="Chicken", quantity=Decimal("5"), unit= "lb", source=ShoppingListSource.RESTOCK,
+        purchased=True, stocked=False)
+    fake_stock_request =  StockPurchasedItemRequest(
+         allocations=[InventoryAllocation(location_id=1, quantity=Decimal("3")),
+                      InventoryAllocation(location_id=2, quantity=Decimal("3"))])
+
+    with (patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_get_shopping_list_item,
+        patch("src.domains.shopping.services.shopping_list_service.process_allocation") as mock_process_allocation,
+        patch("src.domains.shopping.services.shopping_list_service.update_shopping_list_item_as_stocked") as mock_update_shopping_list_item_as_stocked):
+
+        mock_get_shopping_list_item.return_value = fake_shopping_list_item
+        mock_process_allocation.side_effect = ValueError("Allocation quantity does not equal purchased quantity.")
+
+        with pytest.raises(ValueError) as error:
+            stock_purchased_item(
+            session=fake_session,
+            shopping_list_item_id=1,
+            stock_request=fake_stock_request
+            )
+
+        assert str(error.value) == "Allocation quantity does not equal purchased quantity."
+
+        mock_update_shopping_list_item_as_stocked.assert_not_called()
+        mock_process_allocation.assert_called_once()
+
+
+
+        
 
 
 
