@@ -14,3 +14,4 @@ class ShoppingListItem (BaseModel):
     source: ShoppingListSource
     purchased: bool = False
     stocked: bool = False
+    completed: bool = False

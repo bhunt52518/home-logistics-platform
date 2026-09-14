@@ -21,3 +21,4 @@ class ShoppingListItemDB(Base):
     source: Mapped[ShoppingListSource] = mapped_column(Enum(ShoppingListSource), nullable=False)
     purchased: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     stocked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    completed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

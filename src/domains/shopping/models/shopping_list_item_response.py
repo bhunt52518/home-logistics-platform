@@ -15,5 +15,6 @@ class ShoppingListItemResponse(BaseModel):
     source: ShoppingListSource
     purchased: bool
     stocked: bool
+    completed: bool = False
 
     model_config = ConfigDict(from_attributes=True)

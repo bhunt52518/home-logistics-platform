@@ -49,7 +49,11 @@ def get_active_shopping_list_items(session: Session) -> list[ShoppingListItemDB]
     return active_shopping_list_items
 
 def get_purchased_shopping_list_items(session: Session) -> list[ShoppingListItemDB]:
-    purchased_shoping_list_items = session.query(ShoppingListItemDB).filter(ShoppingListItemDB.purchased==True).all()
+    purchased_shoping_list_items = session.query(ShoppingListItemDB).filter(
+        ShoppingListItemDB.purchased==True,
+        ShoppingListItemDB.stocked==False,
+        ShoppingListItemDB.completed==False
+        ).all()
 
     return purchased_shoping_list_items
 
@@ -86,6 +90,21 @@ def update_shopping_list_item_as_stocked(session: Session, shopping_list_item_id
         raise ValueError("Shopping list item does not exist.")
 
     shopping_list_item.stocked = stocked
+
+    try:
+        session.commit()
+        session.refresh(shopping_list_item)
+        return shopping_list_item
+    except Exception:
+        session.rollback()
+        raise
+
+def update_shopping_list_item_as_completed(session: Session, shopping_list_item_id: int, completed: bool) -> ShoppingListItemDB:
+    shopping_list_item = get_shopping_list_item(session=session, shopping_list_id=shopping_list_item_id)
+    if shopping_list_item is None:
+        raise ValueError("Shopping list item does not exist.")
+
+    shopping_list_item.completed = completed
 
     try:
         session.commit()

@@ -8,7 +8,7 @@ from src.domains.shopping.models.shopping_list_merge_suggestion import ShoppingL
 from src.domains.shopping.models.stock_purchased_items_request import StockPurchasedItemRequest
 from src.domains.shopping.services.shopping_list_service import (
     add_shopping_list_item, approve_shopping_list_merge_suggestion, get_active_shopping_list, mark_shopping_list_item_as_purchased,
-    get_purchased_items, stock_purchased_item
+    get_purchased_items, stock_purchased_item, complete_purchased_item
 )
 from src.database.session import get_db
 
@@ -67,6 +67,16 @@ def get_purchased_list(session: Session=Depends(get_db)) -> list[ShoppingListIte
 def patch_shopping_list_item_as_purchased(shopping_list_item_id: int, session: Session=Depends(get_db)):
     try:
         return mark_shopping_list_item_as_purchased(session=session, shopping_list_item_id=shopping_list_item_id)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+@router.patch(
+        "/item/{shopping_list_item_id}/complete", response_model=ShoppingListItemResponse, status_code=200
+)
+
+def patch_shopping_list_item_as_completed(shopping_list_item_id: int, session: Session=Depends(get_db)):
+    try:
+        return complete_purchased_item(session=session, shopping_list_item_id=shopping_list_item_id)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
 

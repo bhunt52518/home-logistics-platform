@@ -1,6 +1,6 @@
 from src.domains.shopping.services.shopping_list_service import (
     add_shopping_list_item, get_duplicate_shopping_list_item, create_shopping_list_item, approve_shopping_list_merge_suggestion,
-    get_active_shopping_list, mark_shopping_list_item_as_purchased, get_purchased_items, stock_purchased_item)
+    get_active_shopping_list, mark_shopping_list_item_as_purchased, get_purchased_items, stock_purchased_item, complete_purchased_item)
 from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.shopping.models.shopping_list_source import ShoppingListSource
 from src.domains.shopping.models.shopping_list_item import ShoppingListItem
@@ -322,6 +322,83 @@ def test_stock_purchase_item_returns_error_for_allocation_not_matching() -> None
 
         mock_update_shopping_list_item_as_stocked.assert_not_called()
         mock_process_allocation.assert_called_once()
+
+def test_complete_purchased_item_returns_item_true() -> None:
+    fake_session = MagicMock()
+    fake_shopping_list_item = ShoppingListItemDB(
+        id=1, item_id=None, name="Chicken", quantity=Decimal("5"), unit= "lb", source=ShoppingListSource.MANUAL,
+        purchased=True, stocked=False, completed=False)
+    fake_completed_shopping_list_item = ShoppingListItemDB(
+        id=1, item_id=None, name="Chicken", quantity=Decimal("5"), unit= "lb", source=ShoppingListSource.MANUAL,
+        purchased=True, stocked=False, completed=True)
+    
+
+    with (patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_get_shopping_list_item,
+        patch("src.domains.shopping.services.shopping_list_service.update_shopping_list_item_as_completed") as mock_completed_item):
+        mock_get_shopping_list_item.return_value = fake_shopping_list_item
+        mock_completed_item.return_value = fake_completed_shopping_list_item
+
+        result = complete_purchased_item(
+            session=fake_session, shopping_list_item_id=fake_shopping_list_item.id)
+
+        assert result.completed == True
+        assert result.id == 1
+        mock_completed_item.assert_called_once()
+        mock_get_shopping_list_item.assert_called_once()
+
+def test_complete_purchase_item_returns_error_for_no_item() -> None:
+    fake_session = MagicMock()
+
+    with patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_get_shopping_list_item:
+        mock_get_shopping_list_item.return_value = None
+
+        with pytest.raises(ValueError) as error:
+            complete_purchased_item(session=fake_session, shopping_list_item_id=1)
+
+            assert str(error.value) == "Shopping list item does not exist."
+
+def test_complete_purchase_item_returns_error_for_having_item_id() -> None:
+    fake_session = MagicMock()
+    fake_shopping_list_item = ShoppingListItemDB(
+        id=1, item_id=1, name="Chicken", quantity=Decimal("5"), unit= "lb", source=ShoppingListSource.MANUAL,
+        purchased=True, stocked=False, completed=False)
+
+    with patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_get_shopping_list_item:
+        mock_get_shopping_list_item.return_value = fake_shopping_list_item
+
+        with pytest.raises(ValueError) as error:
+            complete_purchased_item(session=fake_session, shopping_list_item_id=1)
+
+            assert str(error.value) == "Shopping list item already exist in inventory."
+
+def test_complete_purchase_item_returns_error_not_putchased() -> None:
+    fake_session = MagicMock()
+    fake_shopping_list_item = ShoppingListItemDB(
+        id=1, item_id=None, name="Chicken", quantity=Decimal("5"), unit= "lb", source=ShoppingListSource.MANUAL,
+        purchased=False, stocked=False, completed=False)
+
+    with patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_get_shopping_list_item:
+        mock_get_shopping_list_item.return_value = fake_shopping_list_item
+
+        with pytest.raises(ValueError) as error:
+            complete_purchased_item(session=fake_session, shopping_list_item_id=1)
+
+            assert str(error.value) == "Shopping list item has not been purchased."
+
+def test_complete_purchase_item_returns_error_already_completed() -> None:
+    fake_session = MagicMock()
+    fake_shopping_list_item = ShoppingListItemDB(
+        id=1, item_id=None, name="Chicken", quantity=Decimal("5"), unit= "lb", source=ShoppingListSource.MANUAL,
+        purchased=True, stocked=False, completed=True)
+
+    with patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_get_shopping_list_item:
+        mock_get_shopping_list_item.return_value = fake_shopping_list_item
+
+        with pytest.raises(ValueError) as error:
+            complete_purchased_item(session=fake_session, shopping_list_item_id=1)
+
+            assert str(error.value) == "Shopping list item has already been completed."
+    
 
 
 

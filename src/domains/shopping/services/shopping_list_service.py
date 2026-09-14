@@ -7,7 +7,7 @@ from src.domains.inventory.services.allocation_service import process_allocation
 from src.domains.shopping.repositories.shopping_repository import (
     get_duplicate_shopping_list_item, create_shopping_list_item, get_shopping_list_item, update_shopping_list_quantity,
     get_active_shopping_list_items, update_shopping_list_item_as_purchased, get_purchased_shopping_list_items,
-    update_shopping_list_item_as_stocked)
+    update_shopping_list_item_as_stocked, update_shopping_list_item_as_completed)
 
 from sqlalchemy.orm import Session
 
@@ -81,3 +81,20 @@ def stock_purchased_item(session: Session, shopping_list_item_id: int, stock_req
         session=session, shopping_list_item_id=shopping_item_to_stock.id, stocked=True)
 
     return stocked_item
+
+def complete_purchased_item(session: Session, shopping_list_item_id: int) -> ShoppingListItemDB:
+    shopping_list_item_to_complete = get_shopping_list_item(session=session, shopping_list_id=shopping_list_item_id)
+
+    if shopping_list_item_to_complete is None:
+        raise ValueError("Shopping list item does not exist.")
+    elif shopping_list_item_to_complete.item_id is not None:
+        raise ValueError("Shopping list item already exist in inventory.")
+    elif shopping_list_item_to_complete.purchased is False:
+        raise ValueError("Shopping list item has not been purchased.")
+    elif shopping_list_item_to_complete.completed is True:
+        raise ValueError("Shopping list item has already been completed.")
+
+    completed_item = update_shopping_list_item_as_completed(
+        session=session, shopping_list_item_id=shopping_list_item_to_complete.id, completed=True)
+
+    return completed_item

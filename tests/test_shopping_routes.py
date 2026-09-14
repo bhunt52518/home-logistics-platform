@@ -19,7 +19,7 @@ client = TestClient(app)
 def test_add_shopping_list_item_adds_item() -> None:
     fake_shopping_list_item = ShoppingListItemDB(
         id=1, item_id=None, name="Birthday Candles", quantity=Decimal("1"), unit="pack",
-        source=ShoppingListSource.MANUAL, purchased=False, stocked=False
+        source=ShoppingListSource.MANUAL, purchased=False, stocked=False, completed=False
     )
 
     with patch("src.api.routes.shopping.shopping.add_shopping_list_item") as mock_add_shopping_list_item:
@@ -44,7 +44,8 @@ def test_add_shopping_list_item_adds_item() -> None:
             "unit": "pack",
             "source": "manual",
             "purchased": False,
-            "stocked": False
+            "stocked": False,
+            "completed": False
         }
 
         mock_add_shopping_list_item.assert_called_once()
@@ -102,7 +103,7 @@ def test_add_shopping_list_item_returns_merge_suggestion() -> None:
 def test_approve_shopping_list_merge_seggestion_returns_updated_list() -> None:
     fake_updated_shopping_list_item = ShoppingListItemResponse(
         id=1, item_id=1, name="Chicken", quantity=Decimal("5"), unit="lb",
-        source=ShoppingListSource.MANUAL, purchased=False, stocked=False
+        source=ShoppingListSource.MANUAL, purchased=False, stocked=False, completed=False
     )
 
     with patch("src.api.routes.shopping.shopping.approve_shopping_list_merge_suggestion") as mock_approve_shopping_list_merge_suggestion:
@@ -129,7 +130,8 @@ def test_approve_shopping_list_merge_seggestion_returns_updated_list() -> None:
             "unit": "lb",
             "source": "manual",
             "purchased": False,
-            "stocked": False
+            "stocked": False,
+            "completed": False
         }
 
         mock_approve_shopping_list_merge_suggestion.assert_called_once()
@@ -147,11 +149,11 @@ def test_approve_shopping_list_merge_seggestion_returns_updated_list() -> None:
 def test_get_active_shopping_list_returns_valid_response() -> None:
     fake_item_1 = ShoppingListItemDB(
             id=1, item_id=1, name="Birthday Candles", quantity=Decimal("1"), unit="pack",
-            source=ShoppingListSource.MANUAL, purchased=False, stocked=False
+            source=ShoppingListSource.MANUAL, purchased=False, stocked=False, completed=False
         )
     fake_item_2 = ShoppingListItemDB(
                 id=2, item_id=2, name="Chicken", quantity=Decimal("1"), unit="lb",
-                source=ShoppingListSource.MANUAL, purchased=False, stocked=False
+                source=ShoppingListSource.MANUAL, purchased=False, stocked=False, completed=False
             )
 
     with patch("src.api.routes.shopping.shopping.get_active_shopping_list") as mock_get_active_list:
@@ -174,7 +176,8 @@ def test_get_active_shopping_list_returns_valid_response() -> None:
             "unit": "pack",
             "source": "manual",
             "purchased": False,
-            "stocked": False
+            "stocked": False,
+            "completed": False
         }
 
         assert body[1] == {
@@ -185,7 +188,8 @@ def test_get_active_shopping_list_returns_valid_response() -> None:
             "unit": "lb",
             "source": "manual",
             "purchased": False,
-            "stocked": False
+            "stocked": False,
+            "completed": False
         }
 
         kwargs = mock_get_active_list.call_args.kwargs
@@ -194,7 +198,7 @@ def test_get_active_shopping_list_returns_valid_response() -> None:
 def test_patch_shopping_list_item_as_purchased() -> None:
     fake_updated_item = ShoppingListItemDB(
         id=1, item_id=1, name="Chicken", quantity=Decimal("3"), unit="lb",
-        source=ShoppingListSource.RESTOCK, purchased=True, stocked=False
+        source=ShoppingListSource.RESTOCK, purchased=True, stocked=False, completed=False
     )
 
     with patch("src.api.routes.shopping.shopping.mark_shopping_list_item_as_purchased") as mock_update_item:
@@ -215,11 +219,11 @@ def test_patch_shopping_list_item_as_purchased() -> None:
 def test_get_purchased_list_returns_valid_response() -> None:
     fake_item_1 = ShoppingListItemDB(
             id=1, item_id=1, name="Birthday Candles", quantity=Decimal("1"), unit="pack",
-            source=ShoppingListSource.MANUAL, purchased=True, stocked=False
+            source=ShoppingListSource.MANUAL, purchased=True, stocked=False, completed=False
         )
     fake_item_2 = ShoppingListItemDB(
                 id=2, item_id=2, name="Chicken", quantity=Decimal("1"), unit="lb",
-                source=ShoppingListSource.MANUAL, purchased=True, stocked=False
+                source=ShoppingListSource.MANUAL, purchased=True, stocked=False, completed=False
             )
 
     with patch("src.api.routes.shopping.shopping.get_purchased_items") as mock_get_purchased_items:
@@ -242,7 +246,8 @@ def test_get_purchased_list_returns_valid_response() -> None:
             "unit": "pack",
             "source": "manual",
             "purchased": True,
-            "stocked": False
+            "stocked": False,
+            "completed": False
         }
 
         assert body[1] == {
@@ -253,7 +258,8 @@ def test_get_purchased_list_returns_valid_response() -> None:
             "unit": "lb",
             "source": "manual",
             "purchased": True,
-            "stocked": False
+            "stocked": False,
+            "completed": False
         }
 
         mock_get_purchased_items.assert_called_once()
@@ -264,7 +270,7 @@ def test_get_purchased_list_returns_valid_response() -> None:
 def test_post_stock_purchased_item_returns() -> None:
     fake_shopping_list_item = ShoppingListItemDB(
         id= 1, item_id=1, name="Chicken", quantity=Decimal("5"), unit= "lb", source=ShoppingListSource.RESTOCK,
-        purchased=True, stocked=True)
+        purchased=True, stocked=True, completed=False)
     stock_request = {"allocations": [
         {"location_id": 1, "quantity": "2"},
         {"location_id": 2, "quantity": "3"}
@@ -284,4 +290,40 @@ def test_post_stock_purchased_item_returns() -> None:
         assert response.json()["quantity"] == "5"
 
         mock_stock_purchased_item.assert_called_once()
+
+def test_patch_shopping_list_item_as_completed_returns_completed_item() -> None:
+    fake_completed_item = ShoppingListItemDB(
+        id=1,
+        item_id=None,
+        name="Candles",
+        quantity=Decimal("1"),
+        unit="each",
+        source=ShoppingListSource.MANUAL,
+        purchased=True,
+        stocked=False,
+        completed=True
+    )
+
+    with patch(
+        "src.api.routes.shopping.shopping.complete_purchased_item"
+    ) as mock_complete_purchased_item:
+
+        mock_complete_purchased_item.return_value = fake_completed_item
+
+        response = client.patch(
+            "/shopping/item/1/complete"
+        )
+
+        assert response.status_code == 200
+        assert response.json()["id"] == 1
+        assert response.json()["name"] == "Candles"
+        assert response.json()["purchased"] is True
+        assert response.json()["stocked"] is False
+        assert response.json()["completed"] is True
+
+        mock_complete_purchased_item.assert_called_once()
+
+        call_kwargs = mock_complete_purchased_item.call_args.kwargs
+
+        assert call_kwargs["shopping_list_item_id"] == 1
     
