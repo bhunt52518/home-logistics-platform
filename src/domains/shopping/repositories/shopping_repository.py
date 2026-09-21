@@ -1,5 +1,7 @@
 from src.domains.shopping.models.shopping_list_item import ShoppingListItem
 from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
+from src.domains.inventory.persistence.item_db import ItemDB
+from src.domains.inventory.repositories.inventory_repository import get_item_by_name
 
 from src.core.services.name_validator import NameValidator
 
@@ -105,6 +107,22 @@ def update_shopping_list_item_as_completed(session: Session, shopping_list_item_
         raise ValueError("Shopping list item does not exist.")
 
     shopping_list_item.completed = completed
+
+    try:
+        session.commit()
+        session.refresh(shopping_list_item)
+        return shopping_list_item
+    except Exception:
+        session.rollback()
+        raise
+
+def update_shopping_list_item_id(session: Session, shopping_list_item_id: int, item_id: int) -> ShoppingListItemDB:
+    shopping_list_item = get_shopping_list_item(session=session, shopping_list_id=shopping_list_item_id)
+
+    if shopping_list_item is None:
+        raise ValueError("Shopping list item does not exist.")
+    
+    shopping_list_item.item_id = item_id
 
     try:
         session.commit()

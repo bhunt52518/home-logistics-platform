@@ -8,10 +8,12 @@ from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.persistence.inventory_record_db import InventoryRecordDB
 from src.domains.inventory.models.household_create import HouseholdCreate
 from src.domains.inventory.persistence.household_db import HouseholdDB
+from src.core.services.name_validator import NameValidator
 
 from src.domains.inventory.models.item_create import ItemCreate
 
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 
 
@@ -88,6 +90,14 @@ def create_item(session: Session, item: ItemCreate) -> ItemDB:
 def get_item(session: Session, item_id: int) -> ItemDB:
 
     return session.get(ItemDB, item_id)
+
+def get_item_by_name(session: Session, name: str) -> ItemDB | None:
+    cleaned_name = NameValidator.validate_non_empty(name).lower()
+    duplicate_item = session.query(ItemDB).filter(
+        func.lower(ItemDB.name) == cleaned_name
+    ).first()
+    return duplicate_item
+
 
 def create_inventory_record(session: Session, inventory_record: InventoryRecordDB):
 

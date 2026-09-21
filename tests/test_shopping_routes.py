@@ -4,11 +4,13 @@ from decimal import Decimal
 from fastapi.testclient import TestClient
 
 from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
+from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.shopping.models.shopping_list_merge_suggestion import ShoppingListMergeSuggestion
 from src.domains.shopping.models.shopping_list_item_response import ShoppingListItemResponse
 from src.domains.shopping.models.shopping_list_source import ShoppingListSource
 from src.domains.shopping.services.shopping_list_service import (
-    add_shopping_list_item, approve_shopping_list_merge_suggestion, get_active_shopping_list, get_purchased_items)
+    add_shopping_list_item, approve_shopping_list_merge_suggestion, get_active_shopping_list, get_purchased_items,
+    link_purchased_item_to_inventory)
 from src.main import app
 
 
@@ -326,4 +328,55 @@ def test_patch_shopping_list_item_as_completed_returns_completed_item() -> None:
         call_kwargs = mock_complete_purchased_item.call_args.kwargs
 
         assert call_kwargs["shopping_list_item_id"] == 1
+
+def test_patch_linked_item() -> None:
+    fake_shopping_list_item = ShoppingListItemDB(
+        id= 1, item_id=3, name="Chicken", quantity=Decimal("5"), unit= "lb", source=ShoppingListSource.RESTOCK,
+        purchased=True, stocked=False, completed=False)
+
+    with patch("src.api.routes.shopping.shopping.link_purchased_item_to_inventory") as mock_linked_item:
+        mock_linked_item.return_value = fake_shopping_list_item
+
+        response = client.patch(
+            "/shopping/item/1/linked",
+            params={"item_id": 3}
+        )
+
+        assert response.status_code == 200
+        assert response.json()["item_id"] == 3
+        assert response.json()["name"] == "Chicken"
+        assert response.json()["quantity"] == "5"
+
+        mock_linked_item.assert_called_once()
+
+        call_kwargs = mock_linked_item.call_args.kwargs
+
+        assert call_kwargs["shopping_list_item_id"] == 1
+        assert call_kwargs["item_id"] == 3
+
+def test_get_item_match_route() -> None:
+    fake_item = ItemDB(id=3, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None)
+
+    with patch("src.api.routes.shopping.shopping.find_inventory_match_for_purchased_item") as mock_inventory_match:
+        mock_inventory_match.return_value = fake_item
+
+        response = client.get(
+            "/shopping/item/1/inventory-match",
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {
+            "category_id": 1,
+            "id": 3,
+            "name": "Chicken",
+            "default_unit": "lb",
+            "restock_point": None,
+            "target_stock": None
+        }
+
+        mock_inventory_match.assert_called_once()
+
+        kwargs = mock_inventory_match.call_args.kwargs
+        assert "session" in kwargs
+        assert kwargs["shopping_list_item_id"] == 1
     

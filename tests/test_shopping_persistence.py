@@ -10,7 +10,7 @@ from src.domains.shopping.models.shopping_list_source import ShoppingListSource
 from src.domains.shopping.repositories.shopping_repository import (
     create_shopping_list_item, get_shopping_list_item,get_duplicate_shopping_list_item, update_shopping_list_quantity,
     get_active_shopping_list_items, update_shopping_list_item_as_purchased, get_purchased_shopping_list_items,
-    update_shopping_list_item_as_stocked, update_shopping_list_item_as_completed)
+    update_shopping_list_item_as_stocked, update_shopping_list_item_as_completed, update_shopping_list_item_id)
 
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
@@ -341,3 +341,45 @@ def test_update_shopping_list_item_as_completed_returns_error() -> None:
         with pytest.raises(ValueError, match="Shopping list item does not exist."):
             update_shopping_list_item_as_completed(
                 session=session, shopping_list_item_id=999, completed=True)
+
+def test_update_shopping_list_item_id() -> None:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        fake_shopping_list_item_db = ShoppingListItemDB(
+            id=1, item_id=None, name="Chicken", quantity=Decimal("3"), unit="lb",
+            source=ShoppingListSource.MANUAL, purchased=True, stocked=False, completed=False
+        )
+
+        session.add(fake_shopping_list_item_db)
+        session.commit()
+        session.refresh(fake_shopping_list_item_db)
+
+        result = update_shopping_list_item_id(
+            session=session, shopping_list_item_id=fake_shopping_list_item_db.id, item_id=3)
+        saved_item = get_shopping_list_item(session=session, shopping_list_id=fake_shopping_list_item_db.id)
+
+        assert result.name == "Chicken"
+        assert result.id == 1
+        assert result.item_id == 3
+        assert result.quantity == Decimal("3")
+        assert result.unit == "lb"
+        assert result.source == ShoppingListSource.MANUAL
+        assert result.purchased == True
+        assert result.stocked == False
+        assert result.completed == False
+
+        assert saved_item is not None
+        assert saved_item.item_id is 3
+
+def test_update_shopping_list_item_id_returns_error() -> None:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        with pytest.raises(ValueError, match="Shopping list item does not exist."):
+            update_shopping_list_item_id(
+                session=session, shopping_list_item_id=999, item_id=3)
+
+

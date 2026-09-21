@@ -7,9 +7,13 @@ from src.domains.inventory.services.allocation_service import process_allocation
 from src.domains.shopping.repositories.shopping_repository import (
     get_duplicate_shopping_list_item, create_shopping_list_item, get_shopping_list_item, update_shopping_list_quantity,
     get_active_shopping_list_items, update_shopping_list_item_as_purchased, get_purchased_shopping_list_items,
-    update_shopping_list_item_as_stocked, update_shopping_list_item_as_completed)
+    update_shopping_list_item_as_stocked, update_shopping_list_item_as_completed, update_shopping_list_item_id)
+from src.domains.inventory.repositories.inventory_repository import get_item_by_name, get_item
+from src.domains.inventory.persistence.item_db import ItemDB
+from src.domains.inventory.services.item_service import create_inventory_item
 
 from sqlalchemy.orm import Session
+from decimal import Decimal
 
 
 
@@ -98,3 +102,59 @@ def complete_purchased_item(session: Session, shopping_list_item_id: int) -> Sho
         session=session, shopping_list_item_id=shopping_list_item_to_complete.id, completed=True)
 
     return completed_item
+
+def find_inventory_match_for_purchased_item(session: Session, shopping_list_item_id: int) -> ItemDB | None:
+    shopping_list_item = get_shopping_list_item(session=session, shopping_list_id=shopping_list_item_id)
+
+    if shopping_list_item is None:
+        raise ValueError("Shopping list item not found.")
+    elif shopping_list_item.purchased is False:
+        raise ValueError("Shopping list item has not been purchased.")
+    elif shopping_list_item.item_id is not None:
+        raise ValueError("Shopping list item already exists in inventory.")
+
+    inventory_match = get_item_by_name(session=session, name=shopping_list_item.name)
+
+    return inventory_match
+
+def link_purchased_item_to_inventory(session: Session, shopping_list_item_id: int, item_id: int) -> ShoppingListItemDB:
+    shopping_list_item = get_shopping_list_item(session=session, shopping_list_id=shopping_list_item_id)
+    if shopping_list_item is None:
+        raise ValueError("Shopping list item does not exist.")
+    elif shopping_list_item.purchased is False:
+        raise ValueError("Shopping list item has not been purchased.")
+    elif shopping_list_item.item_id is not None:
+        raise ValueError("Shopping list item already exists in inventory.")
+
+    inventory_item = get_item(session=session, item_id=item_id)
+    if inventory_item is None:
+        raise ValueError("Item does not exist in inventory.")
+    
+    linked_shopping_list_item = update_shopping_list_item_id(
+        session=session, shopping_list_item_id=shopping_list_item.id, item_id=inventory_item.id)
+
+    return linked_shopping_list_item
+
+def create_inventory_item_from_purchase(
+        session: Session, shopping_list_item_id: int, category_id: int, restock_point: Decimal | None = None,
+        target_stock: Decimal | None = None) -> ShoppingListItemDB:
+    item_to_create = get_shopping_list_item(session=session, shopping_list_id=shopping_list_item_id)
+
+    if item_to_create is None:
+        raise ValueError("Shopping list item does not exist.")
+    elif item_to_create.purchased is False:
+        raise ValueError("Shopping list item has not been purchased.")
+    elif item_to_create.item_id is not None:
+        raise ValueError("Item already exists in inventory.")
+
+    created_inventory_item = create_inventory_item(
+        session=session, name=item_to_create.name, category_id=category_id, default_unit=item_to_create.unit,
+        restock_point=restock_point, target_stock=target_stock)
+
+    link_created_item = update_shopping_list_item_id(
+        session=session, shopping_list_item_id=item_to_create.id, item_id=created_inventory_item.id)
+
+    return link_created_item
+
+
+
