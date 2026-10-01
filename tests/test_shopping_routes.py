@@ -379,4 +379,35 @@ def test_get_item_match_route() -> None:
         kwargs = mock_inventory_match.call_args.kwargs
         assert "session" in kwargs
         assert kwargs["shopping_list_item_id"] == 1
+
+def test_post_inventory_item_from_purchase() -> None:
+    fake_shopping_list_item = ShoppingListItemDB(
+        id=1, item_id=3, name="Chicken", quantity=Decimal("3"), unit="lb", source=ShoppingListSource.MANUAL,
+        purchased=True, stocked=False, completed=False
+    )
+
+    with patch("src.api.routes.shopping.shopping.create_inventory_item_from_purchase") as mock_link_purchased_item:
+        mock_link_purchased_item.return_value = fake_shopping_list_item
+
+        response = client.post(
+            "/shopping/item/1/inventory",
+            json={
+                "category_id": 2,
+                "restock_point": "3",
+                "target_stock": "5"
+            }
+        )
+
+        assert response.status_code == 200
+        assert response.json()["item_id"] == 3
+        assert response.json()["name"] == "Chicken"
+
+        mock_link_purchased_item.assert_called_once()
+
+        call_kwargs = mock_link_purchased_item.call_args.kwargs
+
+        assert call_kwargs["shopping_list_item_id"] == 1
+        assert call_kwargs["category_id"] == 2
+        assert call_kwargs["restock_point"] == Decimal("3")
+        assert call_kwargs["target_stock"] == Decimal("5")
     

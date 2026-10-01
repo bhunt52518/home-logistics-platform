@@ -1,7 +1,7 @@
 from src.domains.shopping.services.shopping_list_service import (
     add_shopping_list_item, get_duplicate_shopping_list_item, create_shopping_list_item, approve_shopping_list_merge_suggestion,
     get_active_shopping_list, mark_shopping_list_item_as_purchased, get_purchased_items, stock_purchased_item,
-    complete_purchased_item, find_inventory_match_for_purchased_item, link_purchased_item_to_inventory)
+    complete_purchased_item, find_inventory_match_for_purchased_item, link_purchased_item_to_inventory, create_inventory_item_from_purchase)
 from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.shopping.models.shopping_list_source import ShoppingListSource
 from src.domains.shopping.models.shopping_list_item import ShoppingListItem
@@ -571,6 +571,76 @@ def test_link_purchased_item_returns_error_no_item_in_inventory() -> None:
 
             assert str(error.value) == "Item does not exist in inventory."
             mock_update_item_id.assert_not_called
+
+def test_create_inventory_item_from_purchase_creates_item() -> None:
+    fake_session = MagicMock()
+    fake_shopping_list_item = ShoppingListItemDB(
+        id=1, item_id=None, name="Chicken", quantity=Decimal("3"), unit="lb", source=ShoppingListSource.MANUAL,
+        purchased=True, stocked=False, completed=False)
+    fake_inventory_item = ItemDB(
+        id=3, name="Chicken", category_id=2, default_unit="lb", restock_point=None, target_stock=None)
+    fake_linked_shopping_list_item = ShoppingListItemDB(
+        id=1, item_id=3, name="Chicken", quantity=Decimal("3"), unit="lb", source=ShoppingListSource.MANUAL,
+        purchased=True, stocked=False, completed=False)
+
+    with(patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_item_to_create,
+        patch("src.domains.shopping.services.shopping_list_service.create_inventory_item") as mock_created_inventory_item,
+        patch("src.domains.shopping.services.shopping_list_service.update_shopping_list_item_id") as mock_link_created_item):
+        mock_item_to_create.return_value = fake_shopping_list_item
+        mock_created_inventory_item.return_value = fake_inventory_item
+        mock_link_created_item.return_value = fake_linked_shopping_list_item
+
+        result = create_inventory_item_from_purchase(
+            session=fake_session, shopping_list_item_id=fake_shopping_list_item.id, category_id=2)
+
+        assert result is not None
+        assert result.item_id == 3
+        assert result.name == "Chicken"
+
+        mock_created_inventory_item.assert_called_once_with(
+            session=fake_session, name="Chicken", category_id=2, default_unit="lb", restock_point=None, target_stock=None
+        )
+        mock_link_created_item.assert_called_once_with(session=fake_session, shopping_list_item_id=1, item_id=3)
+
+def test_create_inventory_item_from_purchase_returns_error_no_item() -> None:
+    fake_session = MagicMock()
+
+    with patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_item_to_create:
+        mock_item_to_create.return_value = None
+
+        with pytest.raises(ValueError) as error:
+            create_inventory_item_from_purchase(session=fake_session, shopping_list_item_id=1, category_id=2)
+
+            assert str(error.value) == "Shopping list item does not exist."
+
+def test_create_inventory_item_from_purchase_returns_error_no_item_purchased() -> None:
+    fake_session = MagicMock()
+    fake_shopping_list_item = ShoppingListItemDB(
+            id=1, item_id=None, name="Chicken", quantity=Decimal("3"), unit="lb", source=ShoppingListSource.MANUAL,
+            purchased=False, stocked=False, completed=False)
+
+    with patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_item_to_create:
+        mock_item_to_create.return_value = fake_shopping_list_item
+
+        with pytest.raises(ValueError) as error:
+            create_inventory_item_from_purchase(session=fake_session, shopping_list_item_id=1, category_id=2)
+
+            assert str(error.value) == "Shopping list item has not been purchased."
+
+def test_create_inventory_item_from_purchase_returns_error_item_id_not_none() -> None:
+    fake_session = MagicMock()
+    fake_shopping_list_item = ShoppingListItemDB(
+            id=1, item_id=3, name="Chicken", quantity=Decimal("3"), unit="lb", source=ShoppingListSource.MANUAL,
+            purchased=True, stocked=False, completed=False)
+
+    with patch("src.domains.shopping.services.shopping_list_service.get_shopping_list_item") as mock_item_to_create:
+        mock_item_to_create.return_value = fake_shopping_list_item
+
+        with pytest.raises(ValueError) as error:
+            create_inventory_item_from_purchase(session=fake_session, shopping_list_item_id=1, category_id=2)
+
+            assert str(error.value) == "Item already exists in inventory."
+
 
 
     
