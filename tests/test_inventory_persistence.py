@@ -7,7 +7,7 @@ from src.domains.inventory.persistence.location_db import LocationDB
 from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.inventory.repositories.inventory_repository import (
     create_household, create_category, create_location,create_item, create_inventory_record, get_category,
-    get_items_with_restock_point, get_item_by_name, get_items
+    get_items_with_restock_point, get_item_by_name, get_items, get_item
     )
 
 from sqlalchemy import create_engine, inspect
@@ -103,7 +103,7 @@ def test_item_can_be_saved_and_retrieved() -> None:
         
         item = ItemDB(name="Chicken", category_id=saved_category.id, default_unit="LB")
         saved_item = create_item(session=session, item=item)
-        retrieved_item = session.get(ItemDB, saved_item.id)
+        retrieved_item = get_item(session=session, item_id=saved_item.id)
 
         assert saved_item is not None
         assert saved_item.id is not None

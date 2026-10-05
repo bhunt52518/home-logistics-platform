@@ -1,4 +1,4 @@
-from src.domains.inventory.services.item_service import (create_inventory_item, get_all_inventory_items)
+from src.domains.inventory.services.item_service import (create_inventory_item, get_all_inventory_items, get_inventory_item)
 from src.domains.inventory.persistence.category_db import CategoryDB
 from src.domains.inventory.persistence.item_db import ItemDB
 
@@ -68,3 +68,29 @@ def test_get_all_inventory_items_returns_all_items() -> None:
         assert result[1].name == "Milk"
 
         mock_get_items.assert_called_once_with(session=session)
+
+def test_get_inventory_item_returns_item() -> None:
+    session = MagicMock()
+    item = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None)
+
+    with patch("src.domains.inventory.services.item_service.get_item") as mock_get_item:
+        mock_get_item.return_value = item
+
+        result = get_inventory_item(session=session, item_id=item.id)
+
+        assert result is not None
+        assert result.id == 1
+        assert result.name == "Chicken"
+
+        mock_get_item.assert_called_once_with(session=session, item_id=item.id)
+
+def test_get_inventory_item_returns_error_for_no_item() -> None:
+    session = MagicMock()
+
+    with patch("src.domains.inventory.services.item_service.get_item") as mock_get_item:
+        mock_get_item.return_value = None
+
+        with pytest.raises(ValueError, match="Item does not exist."):
+            get_inventory_item(session=session, item_id=1)
+
+            mock_get_item.assert_called_once_with(session=session, item_id=1)

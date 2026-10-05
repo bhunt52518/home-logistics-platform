@@ -262,3 +262,31 @@ def test_get_all_items_returns_all_items() -> None:
         assert data[1]["default_unit"] == "gal"
 
         mock_all_inventory_items.assert_called_once()
+
+def test_get_item_from_inventory_returns_item() -> None:
+    item = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None)
+
+    with patch("src.api.routes.inventory.item.get_inventory_item") as mock_get_inventory_item:
+        mock_get_inventory_item.return_value = item
+
+        response = client.get("/inventory/item/1")
+
+        assert response.status_code == 200
+
+        data = response.json()
+
+        assert data["id"] == 1
+        assert data["name"] == "Chicken"
+        assert data["category_id"] == 1
+        assert data["default_unit"] == "lb"
+
+def test_get_item_from_inventory_returns_error_for_no_item() -> None:
+    with patch("src.api.routes.inventory.item.get_inventory_item") as mock_get_inventory_item:
+        mock_get_inventory_item.side_effect = ValueError("Item does not exist.")
+
+        response = client.get("/inventory/item/999")
+
+        assert response.status_code == 400
+        assert response.json() == {"detail": "Item does not exist."}
+
+
