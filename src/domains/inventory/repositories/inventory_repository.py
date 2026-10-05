@@ -98,6 +98,10 @@ def get_item_by_name(session: Session, name: str) -> ItemDB | None:
     ).first()
     return duplicate_item
 
+def get_items(session: Session) -> list[ItemDB]:
+    items_db = session.query(ItemDB).all()
+    return items_db
+
 
 def create_inventory_record(session: Session, inventory_record: InventoryRecordDB):
 

@@ -7,7 +7,7 @@ from src.domains.inventory.persistence.location_db import LocationDB
 from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.inventory.repositories.inventory_repository import (
     create_household, create_category, create_location,create_item, create_inventory_record, get_category,
-    get_items_with_restock_point, get_item_by_name
+    get_items_with_restock_point, get_item_by_name, get_items
     )
 
 from sqlalchemy import create_engine, inspect
@@ -233,6 +233,24 @@ def test_get_item_by_name_returns_empty_result_when_not_found() -> None:
         result = get_item_by_name(session=session, name="Bread")
 
         assert result is None
+
+def test_get_items_returns_all_items() -> None:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    item_1 = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None)
+    item_2 = ItemDB(id=2, name="Milk", category_id=2, default_unit="gal", restock_point=None, target_stock=None)
+    items = [item_1, item_2]
+
+    with Session(engine) as session:
+        session.add_all(items)
+        session.commit()
+
+        result = get_items(session=session)
+
+        assert len(result) == 2
+
+
 
 
 

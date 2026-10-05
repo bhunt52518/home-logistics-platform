@@ -43,7 +43,7 @@ def get_purchased_list(session: Session=Depends(get_db)) -> list[ShoppingListIte
         raise HTTPException(status_code=400, detail=str(error)) from error
 
 @router.get(
-        "/item/{shopping_list_item_id}/inventory-match", response_model=ItemResponse, status_code=200
+        "/item/{shopping_list_item_id}/inventory-match", response_model=ItemResponse | None, status_code=200
 )
 
 def get_inventory_match_for_purchased_item(shopping_list_item_id: int, session: Session=Depends(get_db)):

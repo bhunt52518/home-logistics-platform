@@ -238,3 +238,27 @@ def test_get_all_items_needing_restock_returns_empty_list() -> None:
 
         kwargs = mock_get_items_needing_restock.call_args.kwargs
         assert "session" in kwargs
+
+def test_get_all_items_returns_all_items() -> None:
+    item_1 = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None)
+    item_2 = ItemDB(id=2, name="Milk", category_id=2, default_unit="gal", restock_point=None, target_stock=None)
+    items = [item_1, item_2]
+
+    with patch("src.api.routes.inventory.item.get_all_inventory_items") as mock_all_inventory_items:
+        mock_all_inventory_items.return_value = items
+
+        response = client.get("/inventory/items")
+
+        assert response.status_code == 200
+
+        data = response.json()
+        assert len(data) == 2
+        assert data[0]["id"] == 1
+        assert data[0]["name"] == "Chicken"
+        assert data[0]["default_unit"] == "lb"
+
+        assert data[1]["id"] == 2
+        assert data[1]["name"] == "Milk"
+        assert data[1]["default_unit"] == "gal"
+
+        mock_all_inventory_items.assert_called_once()

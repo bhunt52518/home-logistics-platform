@@ -5,9 +5,10 @@ from src.database.session import get_db
 from src.domains.inventory.models.item_create import ItemCreate
 from src.domains.inventory.models.item_reposne import ItemResponse
 from src.domains.inventory.persistence.item_db import ItemDB
-from src.domains.inventory.services.item_service import (create_inventory_item)
+from src.domains.inventory.services.item_service import (create_inventory_item, get_all_inventory_items)
 from src.domains.inventory.services.item_inventory_quantity_service import get_item_inventory_quantity
 from src.domains.inventory.models.item_quantity_response import ItemQuantityResponse
+from src.domains.inventory.models.item_reposne import ItemResponse
 from src.domains.inventory.models.restock_status_response import RestockStatusResponse
 from src.domains.inventory.services.restock_item_service import get_restock_status, get_items_needing_restock
 
@@ -35,6 +36,14 @@ def get_item_quantity(item_id: int, session: Session=Depends(get_db)) -> ItemQua
         return get_item_inventory_quantity(session=session, item_id=item_id)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))from error
+
+@router.get("/items", response_model=list[ItemResponse], status_code=200)
+
+def get_all_items(session: Session=Depends(get_db)):
+    try:
+        return get_all_inventory_items(session=session)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
 
 @router.get("/item/{item_id}/restock-status", response_model=RestockStatusResponse, status_code=200)
 

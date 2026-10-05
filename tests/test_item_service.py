@@ -1,4 +1,4 @@
-from src.domains.inventory.services.item_service import create_inventory_item
+from src.domains.inventory.services.item_service import (create_inventory_item, get_all_inventory_items)
 from src.domains.inventory.persistence.category_db import CategoryDB
 from src.domains.inventory.persistence.item_db import ItemDB
 
@@ -51,3 +51,20 @@ def test_create_inventory_item_rejects_missing_category() -> None:
             create_inventory_item(session=MagicMock(),name="Chicken",category_id=999, default_unit="lb")
 
         mock_create_item.assert_not_called()
+
+def test_get_all_inventory_items_returns_all_items() -> None:
+    session = MagicMock()
+    item_1 = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None)
+    item_2 = ItemDB(id=2, name="Milk", category_id=2, default_unit="gal", restock_point=None, target_stock=None)
+    items = [item_1, item_2]
+
+    with patch("src.domains.inventory.services.item_service.get_items") as mock_get_items:
+        mock_get_items.return_value = items
+
+        result = get_all_inventory_items(session=session)
+
+        assert len(result) == 2
+        assert result[0].name == "Chicken"
+        assert result[1].name == "Milk"
+
+        mock_get_items.assert_called_once_with(session=session)
