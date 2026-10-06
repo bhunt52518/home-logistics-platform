@@ -102,6 +102,15 @@ def get_items(session: Session) -> list[ItemDB]:
     items_db = session.query(ItemDB).all()
     return items_db
 
+def update_item(session: Session, item: ItemDB) -> ItemDB:
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    session.refresh(item)
+
+    return item
 
 def create_inventory_record(session: Session, inventory_record: InventoryRecordDB):
 

@@ -1,6 +1,10 @@
-from src.domains.inventory.services.item_service import (create_inventory_item, get_all_inventory_items, get_inventory_item)
+from src.domains.inventory.services.item_service import (
+    create_inventory_item, get_all_inventory_items, get_inventory_item, update_inventory_item)
 from src.domains.inventory.persistence.category_db import CategoryDB
 from src.domains.inventory.persistence.item_db import ItemDB
+from src.domains.inventory.models.item_update import ItemUpdate
+
+from decimal import Decimal
 
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -94,3 +98,70 @@ def test_get_inventory_item_returns_error_for_no_item() -> None:
             get_inventory_item(session=session, item_id=1)
 
             mock_get_item.assert_called_once_with(session=session, item_id=1)
+
+def test_update_inventory_item_updates_supplied_field() -> None:
+    session = MagicMock()
+    item = ItemDB(
+        id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("5"), target_stock=Decimal("10"))
+    item_update = ItemUpdate(name="Chicken Breast")
+
+    with(patch("src.domains.inventory.services.item_service.get_item") as mock_get_item,
+        patch("src.domains.inventory.services.item_service.update_item") as mock_update_item):
+        mock_get_item.return_value = item
+        mock_update_item.side_effect = lambda session, item: item
+
+        result = update_inventory_item(session=session, item_id=item.id, item_update=item_update)
+
+        assert result.name == "Chicken Breast"
+        assert result.default_unit == "lb"
+        assert result.restock_point == Decimal("5")
+        assert result.target_stock == Decimal("10")
+
+        mock_update_item.assert_called_once_with(session=session, item=item)
+
+def test_update_inventory_item_updates_restock_point_to_none() -> None:
+    session = MagicMock()
+    item = ItemDB(
+        id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("5"), target_stock=Decimal("10"))
+    item_update = ItemUpdate(restock_point=None)
+
+    with(patch("src.domains.inventory.services.item_service.get_item") as mock_get_item,
+        patch("src.domains.inventory.services.item_service.update_item") as mock_update_item):
+        mock_get_item.return_value = item
+        mock_update_item.side_effect = lambda session, item: item
+
+        result = update_inventory_item(session=session, item_id=item.id, item_update=item_update)
+
+        assert result.restock_point is None
+        assert result.target_stock == Decimal("10")
+
+def test_update_inventory_item_rejects_target_stock_below_existing_restock_point() -> None:
+    session = MagicMock()
+    item = ItemDB(
+        id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("5"), target_stock=Decimal("10"))
+    item_update = ItemUpdate(target_stock=Decimal("3"))
+
+    with(patch("src.domains.inventory.services.item_service.get_item") as mock_get_item,
+        patch("src.domains.inventory.services.item_service.update_item") as mock_update_item):
+        mock_get_item.return_value = item
+        mock_update_item.side_effect = lambda session, item: item
+
+        with pytest.raises(ValueError, match="Target stock can not be less than restock point."):
+            update_inventory_item(session=session, item_id=item.id, item_update=item_update)
+
+            mock_update_item.assert_not_called()
+            assert item.target_stock == Decimal("10")
+
+def test_update_inventory_item_rejects_missing_item() -> None:
+    session = MagicMock()
+
+    with(patch("src.domains.inventory.services.item_service.get_item") as mock_get_item,
+        patch("src.domains.inventory.services.item_service.update_item") as mock_update_item):
+        mock_get_item.return_value = None
+        mock_update_item.side_effect = lambda session, item: item
+
+        with pytest.raises(ValueError, match="Item does not exist."):
+
+            update_inventory_item(session=session,item_id=999,item_update=ItemUpdate(name="Chicken Breast"))
+            mock_update_item.assert_not_called()
+

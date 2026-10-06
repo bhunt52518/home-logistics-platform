@@ -289,4 +289,40 @@ def test_get_item_from_inventory_returns_error_for_no_item() -> None:
         assert response.status_code == 400
         assert response.json() == {"detail": "Item does not exist."}
 
+def test_patch_update_inventory_item_updates_item() -> None:
+    item = ItemDB(id=1, name="Chicken Breast", category_id=1, default_unit="lb", restock_point=None, target_stock=None)
+
+    with patch("src.api.routes.inventory.item.update_inventory_item") as mock_updated_item:
+        mock_updated_item.return_value = item
+
+        response = client.patch(
+            "/inventory/item/1",
+            json={"name": "Chicken Breast"})
+
+        assert response.status_code == 200
+
+        data = response.json()
+
+        assert data["id"] == 1
+        assert data["name"] == "Chicken Breast"
+        assert data["default_unit"] == "lb"
+
+        mock_updated_item.assert_called_once()
+
+        call_kwargs = mock_updated_item.call_args.kwargs
+
+        assert call_kwargs["item_id"] == 1
+        assert call_kwargs["item_update"].name == "Chicken Breast"
+        assert call_kwargs["item_update"].model_fields_set == {"name"}
+
+def test_patch_update_inventory_item_returns_error_for_missing_item() -> None:
+    with patch("src.api.routes.inventory.item.update_inventory_item") as mock_updated_item:
+        mock_updated_item.side_effect = ValueError("Item does not exist.")
+
+        response = client.patch("/inventory/item/999",
+                               json={"name": "Chicken Breast"})
+
+        assert response.status_code == 400
+        assert response.json() == {"detail": "Item does not exist."}
+
 

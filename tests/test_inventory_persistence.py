@@ -7,7 +7,7 @@ from src.domains.inventory.persistence.location_db import LocationDB
 from src.domains.shopping.persistence.shopping_list_db import ShoppingListItemDB
 from src.domains.inventory.repositories.inventory_repository import (
     create_household, create_category, create_location,create_item, create_inventory_record, get_category,
-    get_items_with_restock_point, get_item_by_name, get_items, get_item
+    get_items_with_restock_point, get_item_by_name, get_items, get_item, update_item
     )
 
 from sqlalchemy import create_engine, inspect
@@ -249,6 +249,31 @@ def test_get_items_returns_all_items() -> None:
         result = get_items(session=session)
 
         assert len(result) == 2
+
+def test_update_item_updates_fields() -> None:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        new_category = CategoryDB(name="Meat", perishable_default=True)
+        saved_category = create_category(session=session, category=new_category)
+
+        new_item = ItemDB(
+            name="Chicken", category_id=saved_category.id, default_unit="lb", restock_point=None, target_stock=None)
+        saved_item = create_item(session=session, item=new_item)
+
+        saved_item.default_unit = "oz"
+        saved_item.restock_point = Decimal("5")
+
+        updated_item = update_item(session=session, item=saved_item)
+
+        assert updated_item.default_unit == "oz"
+        assert updated_item.restock_point == Decimal("5")
+
+        retrieved_item = get_item(session=session, item_id=saved_item.id)
+
+        assert retrieved_item.default_unit == "oz"
+        assert retrieved_item.restock_point == Decimal("5")
 
 
 
