@@ -365,3 +365,39 @@ def test_patch_archive_inventory_item_rejects_nonzero_quantity() -> None:
                 session=mock_archived_item.call_args.kwargs["session"],
                 item_id=1
             )
+def test_patch_restore_inventory_item_returns_restored_item() -> None:
+    item_1 = ItemDB(id=1, name="Chicken Breast", category_id=1, default_unit="lb", restock_point=None, target_stock=None, active=True)
+
+    with patch("src.api.routes.inventory.item.restore_inventory_item") as mock_restored_item:
+        mock_restored_item.return_value = item_1
+
+        response = client.patch(
+            "/inventory/item/1/restore"
+        )
+
+        data = response.json()
+
+        assert response.status_code == 200
+        assert data["id"] == 1
+        assert data["active"] == True
+
+        mock_restored_item.assert_called_once()
+
+        call_kwargs = mock_restored_item.call_args.kwargs
+
+        assert call_kwargs["item_id"] == 1
+        assert "session" in call_kwargs
+
+def test_patch_restore_inventory_item_rejects_active_item() -> None:
+
+    with patch("src.api.routes.inventory.item.restore_inventory_item") as mock_restored_item:
+        mock_restored_item.side_effect = ValueError("Item is already active.")
+
+        response = client.patch(
+            "/inventory/item/1/restore"
+        )
+
+        data = response.json()
+
+        assert response.status_code == 400
+        assert response.json() == {"detail": "Item is already active."}

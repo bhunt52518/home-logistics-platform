@@ -76,3 +76,14 @@ def archive_inventory_item(session: Session, item_id: int) -> ItemDB:
     archive_item.active = False
 
     return update_item(session=session, item=archive_item)
+
+def restore_inventory_item(session: Session, item_id: int) -> ItemDB:
+    restore_item = get_item(session=session, item_id=item_id)
+
+    if restore_item is None:
+        raise ValueError("Item does not exist.")
+    elif restore_item.active is True:
+        raise ValueError("Item is already active.")
+
+    restore_item.active = True
+    return update_item(session=session, item=restore_item)

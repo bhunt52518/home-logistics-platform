@@ -1,5 +1,6 @@
 from src.domains.inventory.services.item_service import (
-    create_inventory_item, get_all_inventory_items, get_inventory_item, update_inventory_item, archive_inventory_item)
+    create_inventory_item, get_all_inventory_items, get_inventory_item, update_inventory_item, archive_inventory_item,
+    restore_inventory_item)
 from src.domains.inventory.persistence.category_db import CategoryDB
 from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.models.item_update import ItemUpdate
@@ -244,5 +245,58 @@ def test_archive_inventory_item_rejects_already_archived_item() -> None:
             assert item.active is False
 
 
+def test_restore_inventory_item_restores_archived_item() -> None:
+    session = MagicMock()
+    item = ItemDB(
+        id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("5"), target_stock=Decimal("10"),
+        active=False)
+    updated_item = ItemDB(
+            id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("5"), target_stock=Decimal("10"),
+            active=True)
 
+    with (patch("src.domains.inventory.services.item_service.get_item") as mock_get_item,
+        patch("src.domains.inventory.services.item_service.update_item") as mock_updated_item):
+        mock_get_item.return_value = item
+        mock_updated_item.return_value = updated_item
+
+        result = restore_inventory_item(session=session, item_id=item.id)
+
+        assert result.active == True
+        assert result.id == 1
+        mock_updated_item.assert_called_once()
+
+        call_kwargs = mock_updated_item.call_args.kwargs
+        assert call_kwargs["item"].active == True
+
+def test_restore_inventory_item_rejects_missing_item() -> None:
+    session = MagicMock()
+
+    with (patch("src.domains.inventory.services.item_service.get_item") as mock_get_item,
+        patch("src.domains.inventory.services.item_service.update_item") as mock_update_item):
+        mock_get_item.return_value = None
+
+        with pytest.raises(ValueError, match="Item does not exist."):
+            restore_inventory_item(session=session, item_id=999)
+
+            mock_update_item.assert_not_called()
+
+def test_restore_inventory_item_rejects_active_item() -> None:
+    session = MagicMock()
+    item = ItemDB(
+        id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("5"), target_stock=Decimal("10"),
+        active=True)
+
+    with (patch("src.domains.inventory.services.item_service.get_item") as mock_get_item,
+        patch("src.domains.inventory.services.item_service.update_item") as mock_updated_item):
+        mock_get_item.return_value = item
+        mock_updated_item.return_value = None
+
+        with pytest.raises(ValueError, match="Item is already active."):
+            restore_inventory_item(session=session, item_id=item.id)
+
+        mock_updated_item.assert_not_called()
+
+
+
+    
 
