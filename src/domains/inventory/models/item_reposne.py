@@ -13,3 +13,4 @@ class ItemResponse(BaseModel):
     default_unit: str
     restock_point: Decimal | None
     target_stock: Decimal | None
+    active: bool

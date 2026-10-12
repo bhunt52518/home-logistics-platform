@@ -355,7 +355,7 @@ def test_patch_linked_item() -> None:
         assert call_kwargs["item_id"] == 3
 
 def test_get_item_match_route() -> None:
-    fake_item = ItemDB(id=3, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None)
+    fake_item = ItemDB(id=3, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None, active=True)
 
     with patch("src.api.routes.shopping.shopping.find_inventory_match_for_purchased_item") as mock_inventory_match:
         mock_inventory_match.return_value = fake_item
@@ -371,7 +371,8 @@ def test_get_item_match_route() -> None:
             "name": "Chicken",
             "default_unit": "lb",
             "restock_point": None,
-            "target_stock": None
+            "target_stock": None,
+            "active": True
         }
 
         mock_inventory_match.assert_called_once()

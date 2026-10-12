@@ -1,8 +1,9 @@
 from src.domains.inventory.services.item_service import (
-    create_inventory_item, get_all_inventory_items, get_inventory_item, update_inventory_item)
+    create_inventory_item, get_all_inventory_items, get_inventory_item, update_inventory_item, archive_inventory_item)
 from src.domains.inventory.persistence.category_db import CategoryDB
 from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.models.item_update import ItemUpdate
+from src.domains.inventory.models.item_quantity_response import ItemQuantityResponse
 
 from decimal import Decimal
 
@@ -164,4 +165,84 @@ def test_update_inventory_item_rejects_missing_item() -> None:
 
             update_inventory_item(session=session,item_id=999,item_update=ItemUpdate(name="Chicken Breast"))
             mock_update_item.assert_not_called()
+
+def test_archive_inventory_item_archives_zero_quantity_item() -> None:
+    session = MagicMock()
+    item = ItemDB(
+        id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("5"), target_stock=Decimal("10"), active=True)
+    item_quantity = ItemQuantityResponse(name="Chicken", total_quantity=Decimal("0"), unit="lb")
+    updated_item = ItemDB(
+        id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("5"), target_stock=Decimal("10"), active=False)
+
+    with(patch("src.domains.inventory.services.item_service.get_item") as mock_get_item,
+        patch("src.domains.inventory.services.item_service.get_item_inventory_quantity") as mock_get_item_quantity,
+        patch("src.domains.inventory.services.item_service.update_item") as mock_update_item):
+        mock_get_item.return_value = item
+        mock_get_item_quantity.return_value = item_quantity
+        mock_update_item.return_value = updated_item
+
+        result = archive_inventory_item(session=session, item_id=item.id)
+
+        assert result.active == False
+        mock_update_item.assert_called_once()
+
+        call_kwargs = mock_update_item.call_args.kwargs
+        assert call_kwargs["item"].active is False
+
+        mock_get_item_quantity.assert_called_once_with(session=session, item_id=1)
+
+def test_archive_inventory_item_rejects_nonzero_quantity() -> None:
+    session = MagicMock()
+    item = ItemDB(
+        id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("5"), target_stock=Decimal("10"), active=True)
+    item_quantity = ItemQuantityResponse(name="Chicken", total_quantity=Decimal("3"), unit="lb")
+
+    with(patch("src.domains.inventory.services.item_service.get_item") as mock_get_item,
+        patch("src.domains.inventory.services.item_service.get_item_inventory_quantity") as mock_get_item_quantity,
+        patch("src.domains.inventory.services.item_service.update_item") as mock_update_item):
+        mock_get_item.return_value = item
+        mock_get_item_quantity.return_value = item_quantity
+        mock_update_item.return_value = None
+
+        with pytest.raises(ValueError, match="Item can not be archived while inventory quantity is greater than zero."):
+            archive_inventory_item(session=session, item_id=1)
+
+            mock_update_item.assert_not_called()
+            assert item.active is True
+
+def test_archive_inventory_item_rejects_missing_item() -> None:
+    session = MagicMock()
+
+    with (patch("src.domains.inventory.services.item_service.get_item") as mock_get_item,
+        patch("src.domains.inventory.services.item_service.get_item_inventory_quantity") as mock_get_item_quantity,
+        patch("src.domains.inventory.services.item_service.update_item") as mock_update_item):
+        mock_get_item.return_value = None
+
+        with pytest.raises(ValueError, match="Item does not exist."):
+            archive_inventory_item(session=session, item_id=999)
+
+            mock_get_item_quantity.assert_not_called()
+            mock_update_item.assert_not_called()
+
+def test_archive_inventory_item_rejects_already_archived_item() -> None:
+    session = MagicMock()
+    item = ItemDB(
+        id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=Decimal("5"), target_stock=Decimal("10"), active=False)
+    item_quantity = ItemQuantityResponse(name="Chicken", total_quantity=Decimal("0"), unit="lb")
+    
+    with(patch("src.domains.inventory.services.item_service.get_item") as mock_get_item,
+        patch("src.domains.inventory.services.item_service.get_item_inventory_quantity") as mock_get_item_quantity,
+        patch("src.domains.inventory.services.item_service.update_item") as mock_update_item):
+        mock_get_item.return_value = item
+        mock_get_item_quantity.return_value = item_quantity
+        mock_update_item.return_value = None
+    
+        with pytest.raises(ValueError, match="Item is already archived."):
+            archive_inventory_item(session=session, item_id=1)
+    
+            mock_update_item.assert_not_called()
+            assert item.active is False
+
+
+
 

@@ -6,7 +6,8 @@ from src.domains.inventory.models.item_create import ItemCreate
 from src.domains.inventory.models.item_reposne import ItemResponse
 from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.models.item_update import ItemUpdate
-from src.domains.inventory.services.item_service import (create_inventory_item, get_all_inventory_items, get_inventory_item, update_inventory_item)
+from src.domains.inventory.services.item_service import (
+    create_inventory_item, get_all_inventory_items, get_inventory_item, update_inventory_item, archive_inventory_item)
 from src.domains.inventory.services.item_inventory_quantity_service import get_item_inventory_quantity
 from src.domains.inventory.models.item_quantity_response import ItemQuantityResponse
 from src.domains.inventory.models.item_reposne import ItemResponse
@@ -80,3 +81,12 @@ def patch_update_inventory_item(item_id: int, item_update: ItemUpdate, session: 
         return update_inventory_item(session=session, item_id=item_id, item_update=item_update)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
+
+@router.patch("/item/{item_id}/archive", response_model=ItemResponse, status_code=200)
+
+def patch_archived_item(item_id: int, session: Session=Depends(get_db)) -> ItemResponse:
+    try:
+        return archive_inventory_item(session=session, item_id=item_id)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+

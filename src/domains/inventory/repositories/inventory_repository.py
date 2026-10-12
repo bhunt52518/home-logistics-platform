@@ -88,8 +88,9 @@ def create_item(session: Session, item: ItemCreate) -> ItemDB:
     return item_db
 
 def get_item(session: Session, item_id: int) -> ItemDB:
+    item = session.query(ItemDB).filter(ItemDB.id==item_id).first()
 
-    return session.get(ItemDB, item_id)
+    return item
 
 def get_item_by_name(session: Session, name: str) -> ItemDB | None:
     cleaned_name = NameValidator.validate_non_empty(name).lower()
@@ -99,7 +100,7 @@ def get_item_by_name(session: Session, name: str) -> ItemDB | None:
     return duplicate_item
 
 def get_items(session: Session) -> list[ItemDB]:
-    items_db = session.query(ItemDB).all()
+    items_db = session.query(ItemDB).filter(ItemDB.active.is_(True)).all()
     return items_db
 
 def update_item(session: Session, item: ItemDB) -> ItemDB:

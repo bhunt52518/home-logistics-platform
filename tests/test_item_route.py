@@ -18,7 +18,8 @@ def test_post_item_returns_created_item() -> None:
         name="Chicken",
         default_unit="lb",
         restock_point=Decimal("2"),
-        target_stock=Decimal("5")
+        target_stock=Decimal("5"),
+        active=True
     )
 
     with patch("src.api.routes.inventory.item.create_inventory_item") as mock_create_inventory_item:
@@ -31,7 +32,8 @@ def test_post_item_returns_created_item() -> None:
                 "category_id": 1,
                 "default_unit": "lb",
                 "restock_point": "2",
-                "target_stock": "5"
+                "target_stock": "5",
+                "active": True
             },
         )
 
@@ -42,7 +44,8 @@ def test_post_item_returns_created_item() -> None:
             "name": "Chicken",
             "default_unit": "lb",
             "restock_point": "2",
-            "target_stock": "5"
+            "target_stock": "5",
+            "active": True
         }
 
         kwargs = mock_create_inventory_item.call_args.kwargs
@@ -240,8 +243,8 @@ def test_get_all_items_needing_restock_returns_empty_list() -> None:
         assert "session" in kwargs
 
 def test_get_all_items_returns_all_items() -> None:
-    item_1 = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None)
-    item_2 = ItemDB(id=2, name="Milk", category_id=2, default_unit="gal", restock_point=None, target_stock=None)
+    item_1 = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None, active=True)
+    item_2 = ItemDB(id=2, name="Milk", category_id=2, default_unit="gal", restock_point=None, target_stock=None, active=True)
     items = [item_1, item_2]
 
     with patch("src.api.routes.inventory.item.get_all_inventory_items") as mock_all_inventory_items:
@@ -264,7 +267,7 @@ def test_get_all_items_returns_all_items() -> None:
         mock_all_inventory_items.assert_called_once()
 
 def test_get_item_from_inventory_returns_item() -> None:
-    item = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None)
+    item = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None, active=True)
 
     with patch("src.api.routes.inventory.item.get_inventory_item") as mock_get_inventory_item:
         mock_get_inventory_item.return_value = item
@@ -290,7 +293,7 @@ def test_get_item_from_inventory_returns_error_for_no_item() -> None:
         assert response.json() == {"detail": "Item does not exist."}
 
 def test_patch_update_inventory_item_updates_item() -> None:
-    item = ItemDB(id=1, name="Chicken Breast", category_id=1, default_unit="lb", restock_point=None, target_stock=None)
+    item = ItemDB(id=1, name="Chicken Breast", category_id=1, default_unit="lb", restock_point=None, target_stock=None, active=True)
 
     with patch("src.api.routes.inventory.item.update_inventory_item") as mock_updated_item:
         mock_updated_item.return_value = item
@@ -325,4 +328,40 @@ def test_patch_update_inventory_item_returns_error_for_missing_item() -> None:
         assert response.status_code == 400
         assert response.json() == {"detail": "Item does not exist."}
 
+def test_patch_archive_inventory_item_returns_archived_item() -> None:
+    item_1 = ItemDB(id=1, name="Chicken Breast", category_id=1, default_unit="lb", restock_point=None, target_stock=None, active=False)
 
+    with patch("src.api.routes.inventory.item.archive_inventory_item") as mock_archived_item:
+        mock_archived_item.return_value = item_1
+
+        response = client.patch(
+            "inventory/item/1/archive"
+        )
+
+        data = response.json()
+
+        assert response.status_code == 200
+        assert data["id"] == 1
+        assert data["active"] == False
+
+        mock_archived_item.assert_called_once()
+
+        call_kwargs = mock_archived_item.call_args.kwargs
+
+        assert call_kwargs["item_id"] == 1
+        assert "session" in call_kwargs
+
+def test_patch_archive_inventory_item_rejects_nonzero_quantity() -> None:
+
+    with patch("src.api.routes.inventory.item.archive_inventory_item") as mock_archived_item:
+            mock_archived_item.side_effect = ValueError("Item can not be archived while inventory quantity is greater than zero.")
+            response = client.patch(
+                "/inventory/item/1/archive"
+            )
+
+            assert response.status_code == 400
+            assert response.json() == {"detail": "Item can not be archived while inventory quantity is greater than zero."}
+            mock_archived_item.assert_called_once_with(
+                session=mock_archived_item.call_args.kwargs["session"],
+                item_id=1
+            )

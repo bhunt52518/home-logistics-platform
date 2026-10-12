@@ -275,6 +275,23 @@ def test_update_item_updates_fields() -> None:
         assert retrieved_item.default_unit == "oz"
         assert retrieved_item.restock_point == Decimal("5")
 
+def test_get_items_excludes_archived_items() -> None:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    item_1 = ItemDB(id=1, name="Chicken", category_id=1, default_unit="lb", restock_point=None, target_stock=None, active=True)
+    item_2 = ItemDB(id=2, name="Milk", category_id=2, default_unit="gal", restock_point=None, target_stock=None, active=False)
+    items = [item_1, item_2]
+
+    with Session(engine) as session:
+        session.add_all(items)
+        session.commit()
+
+        active_item = get_items(session=session)
+
+        assert len(active_item) == 1
+        assert active_item[0].name == "Chicken"
+        assert active_item[0].active is True
 
 
 

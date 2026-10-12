@@ -6,6 +6,7 @@ from src.domains.inventory.persistence.item_db import ItemDB
 from src.domains.inventory.models.item_update import ItemUpdate
 from src.core.services.target_stock_validator import TargetStockValidator
 from src.domains.inventory.repositories.inventory_repository import (create_item, get_category, get_items, get_item, update_item)
+from src.domains.inventory.services.item_inventory_quantity_service import get_item_inventory_quantity
 from src.core.services.unit_conversion_service import normalize_unit
 
 def create_inventory_item(session: Session, name: str, category_id: int, default_unit: str, restock_point: Decimal | None = None, target_stock: Decimal | None = None) -> ItemDB:
@@ -57,3 +58,21 @@ def update_inventory_item(session: Session, item_id: int, item_update: ItemUpdat
         setattr(item, field, value)
 
     return update_item(session=session, item=item)
+
+def archive_inventory_item(session: Session, item_id: int) -> ItemDB:
+    archive_item = get_item(session=session, item_id=item_id)
+
+    if archive_item is None:
+        raise ValueError("Item does not exist.")
+
+    if archive_item.active is False:
+        raise ValueError("Item is already archived.")
+
+    archived_item_quantity = get_item_inventory_quantity(session=session, item_id=item_id)
+
+    if archived_item_quantity.total_quantity > Decimal("0"):
+        raise ValueError("Item can not be archived while inventory quantity is greater than zero.")
+
+    archive_item.active = False
+
+    return update_item(session=session, item=archive_item)

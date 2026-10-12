@@ -1,7 +1,9 @@
 from src.database.base import Base
 
-from sqlalchemy import Integer, String, ForeignKey, Numeric
+from sqlalchemy import Integer, String, ForeignKey, Numeric, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
+
+
 
 from decimal import Decimal
 
@@ -14,3 +16,4 @@ class ItemDB(Base):
     default_unit: Mapped[str] = mapped_column(String, nullable=False)
     restock_point: Mapped[Decimal | None] = mapped_column(Numeric, nullable=True)
     target_stock: Mapped[Decimal | None] = mapped_column(Numeric, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
